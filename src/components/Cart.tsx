@@ -48,8 +48,8 @@ const Cart: React.FC<CartProps> = ({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col max-w-4xl mx-auto px-4 py-8" style={{ maxHeight: 'calc(100vh - 120px)', height: 'calc(100vh - 120px)', minHeight: 0 }}>
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <button
           onClick={onContinueShopping}
           aria-label="Back"
@@ -66,60 +66,68 @@ const Cart: React.FC<CartProps> = ({
         </button>
       </div>
 
-      <div className="glass-card rounded-xl overflow-hidden mb-8">
-        {cartItems.map((item, index) => (
-          <div key={item.id} className={`p-6 ${index !== cartItems.length - 1 ? 'border-b border-cafe-primary/30' : ''}`}>
-            <div className="flex">
-              <div className="flex-1">
-                <h3 className="text-lg font-medium text-cafe-text mb-1">{item.name}</h3>
-                {item.selectedVariation && (
-                  <p className="text-sm text-cafe-textMuted mb-1">Package: {item.selectedVariation.name}</p>
-                )}
-                {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                  <p className="text-sm text-cafe-textMuted mb-1">
-                    Add-ons: {item.selectedAddOns.map(addOn => 
-                      addOn.quantity && addOn.quantity > 1 
-                        ? `${addOn.name} x${addOn.quantity}`
-                        : addOn.name
-                    ).join(', ')}
-                  </p>
-                )}
-                <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice} each</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center space-x-3 glass rounded-full p-1 border border-cafe-primary/30">
-                <button
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
-                >
-                  <Minus className="h-4 w-4 text-cafe-primary" />
-                </button>
-                <span className="font-semibold text-cafe-text min-w-[32px] text-center">{item.quantity}</span>
-                <button
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
-                >
-                  <Plus className="h-4 w-4 text-cafe-primary" />
-                </button>
+      <div 
+        className="flex-1 overflow-y-auto mb-6 min-h-0"
+        style={{ 
+          WebkitOverflowScrolling: 'touch', 
+          overscrollBehavior: 'contain'
+        }}
+      >
+        <div className="glass-card rounded-xl overflow-hidden">
+          {cartItems.map((item, index) => (
+            <div key={item.id} className={`p-6 ${index !== cartItems.length - 1 ? 'border-b border-cafe-primary/30' : ''}`}>
+              <div className="flex">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-cafe-text mb-1">{item.name}</h3>
+                  {item.selectedVariation && (
+                    <p className="text-sm text-cafe-textMuted mb-1">Package: {item.selectedVariation.name}</p>
+                  )}
+                  {item.selectedAddOns && item.selectedAddOns.length > 0 && (
+                    <p className="text-sm text-cafe-textMuted mb-1">
+                      Add-ons: {item.selectedAddOns.map(addOn => 
+                        addOn.quantity && addOn.quantity > 1 
+                          ? `${addOn.name} x${addOn.quantity}`
+                          : addOn.name
+                      ).join(', ')}
+                    </p>
+                  )}
+                  <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice} each</p>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-4 ml-auto">
-                <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  className="p-2 text-cafe-primary hover:text-cafe-secondary hover:bg-cafe-primary/20 rounded-full transition-all duration-200"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+              <div className="mt-4 flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center space-x-3 glass rounded-full p-1 border border-cafe-primary/30">
+                  <button
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+                  >
+                    <Minus className="h-4 w-4 text-cafe-primary" />
+                  </button>
+                  <span className="font-semibold text-cafe-text min-w-[32px] text-center">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+                  >
+                    <Plus className="h-4 w-4 text-cafe-primary" />
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-4 ml-auto">
+                  <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="p-2 text-cafe-primary hover:text-cafe-secondary hover:bg-cafe-primary/20 rounded-full transition-all duration-200"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <div className="glass-card rounded-xl p-6">
+      <div className="glass-card rounded-xl p-6 flex-shrink-0" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center justify-between text-2xl font-semibold text-cafe-text mb-6">
           <span>Total:</span>
           <span className="text-white">₱{(getTotalPrice() || 0).toFixed(2)}</span>

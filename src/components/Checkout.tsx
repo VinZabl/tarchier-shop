@@ -321,24 +321,50 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
     }
   };
 
-  const handleDownloadQRCode = (qrCodeUrl: string, paymentMethodName: string) => {
+  const handleDownloadQRCode = async (qrCodeUrl: string, paymentMethodName: string) => {
     try {
-      // For Messenger's in-app browser and better compatibility, use direct link
-      // This avoids CORS issues with fetch() that Messenger's browser may block
+      // Try fetch approach first for better download support
+      try {
+        const response = await fetch(qrCodeUrl, {
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `qr-code-${paymentMethodName.toLowerCase().replace(/\s+/g, '-')}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      } catch (fetchError) {
+        // If fetch fails (e.g., CORS issue), fall back to direct link
+        console.log('Fetch failed, trying direct link approach:', fetchError);
+      }
+      
+      // Fallback: Direct link with download attribute
       const link = document.createElement('a');
       link.href = qrCodeUrl;
       link.download = `qr-code-${paymentMethodName.toLowerCase().replace(/\s+/g, '-')}.png`;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      
-      // Append to body, click, then remove
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
       console.error('Failed to download QR code:', error);
-      // Fallback: open image in new tab where user can save manually
-      window.open(qrCodeUrl, '_blank');
+      // Last resort: try to trigger download via iframe (for Messenger compatibility)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = qrCodeUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
     }
   };
 

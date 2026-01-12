@@ -24,6 +24,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [hasCopiedMessage, setHasCopiedMessage] = useState(false);
+  const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [bulkInputValues, setBulkInputValues] = useState<Record<string, string>>({});
   const [bulkSelectedGames, setBulkSelectedGames] = useState<string[]>([]);
 
@@ -208,6 +210,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     setReceiptImageUrl(null);
     setReceiptPreview(null);
     setReceiptError(null);
+    setHasCopiedMessage(false); // Reset copy state when receipt is removed
   };
 
   // Generate the order message text
@@ -301,9 +304,20 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
       const message = generateOrderMessage();
       await navigator.clipboard.writeText(message);
       setCopied(true);
+      setHasCopiedMessage(true); // Mark that copy button has been clicked
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy message:', error);
+    }
+  };
+
+  const handleCopyAccountNumber = async (accountNumber: string) => {
+    try {
+      await navigator.clipboard.writeText(accountNumber);
+      setCopiedAccountNumber(true);
+      setTimeout(() => setCopiedAccountNumber(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy account number:', error);
     }
   };
 
@@ -547,7 +561,7 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
         <div className="glass-card rounded-xl p-6">
           <h2 className="text-2xl font-medium text-cafe-text mb-6">Choose Payment Method</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
             {paymentMethods.map((method) => (
               <button
                 key={method.id}
@@ -555,19 +569,19 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                 onClick={() => {
                   setPaymentMethod(method.id as PaymentMethod);
                 }}
-                className={`p-2 rounded-xl border-2 transition-all duration-200 flex flex-row items-center gap-2 ${
+                className={`p-2 md:p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
                   paymentMethod === method.id
                     ? 'border-transparent text-white'
                     : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                 }`}
                 style={paymentMethod === method.id ? { backgroundColor: '#1E7ACB' } : {}}
               >
-                {/* Icon on Left */}
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
-                  <span className="text-2xl">💳</span>
+                {/* Icon on Top */}
+                <div className="relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
+                  <span className="text-xl md:text-2xl">💳</span>
                 </div>
-                {/* Text on Right */}
-                <span className="font-medium text-sm flex-1 text-left">{method.name}</span>
+                {/* Text Below */}
+                <span className="font-medium text-xs md:text-sm text-center">{method.name}</span>
               </button>
             ))}
           </div>
@@ -582,15 +596,30 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex-1">
                   <p className="text-sm text-cafe-textMuted mb-1">{selectedPaymentMethod.name}</p>
-                  <p className="font-mono text-cafe-text font-medium">{selectedPaymentMethod.account_number}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-mono text-cafe-text font-medium">{selectedPaymentMethod.account_number}</p>
+                    <button
+                      onClick={() => handleCopyAccountNumber(selectedPaymentMethod.account_number)}
+                      className="px-3 py-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0 text-sm font-medium"
+                      title="Copy account number"
+                    >
+                      {copiedAccountNumber ? (
+                        <span className="text-green-400">Copied!</span>
+                      ) : (
+                        <span className="text-cafe-text">Copy</span>
+                      )}
+                    </button>
+                  </div>
                   <p className="text-sm text-cafe-textMuted mb-3">Account Name: {selectedPaymentMethod.account_name}</p>
-                  <p className="text-xl font-semibold text-white">Amount: ₱{totalPrice}</p>
+                  <p className="text-xl font-semibold text-white mb-3">Amount: ₱{totalPrice}</p>
+                  <p className="text-sm text-cafe-textMuted">Press the copy button to copy the number, make a payment, then upload the receipt below 👇</p>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 w-full md:w-auto flex flex-col items-center md:items-start">
+                  <h3 className="font-medium text-cafe-text mb-4 text-center md:text-left w-full md:w-auto">Other Option</h3>
                   <img 
                     src={selectedPaymentMethod.qr_code_url} 
                     alt={`${selectedPaymentMethod.name} QR Code`}
-                    className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm"
+                    className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm mx-auto md:mx-0"
                     onError={(e) => {
                       e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
                     }}
@@ -752,11 +781,12 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
           </div>
 
           <div ref={buttonsRef}>
+            {/* Copy button - must be clicked before placing order */}
             <button
               onClick={handleCopyMessage}
-              disabled={uploadingReceipt}
+              disabled={uploadingReceipt || !paymentMethod || !receiptImageUrl}
               className={`w-full py-3 rounded-xl font-medium transition-all duration-200 transform mb-3 flex items-center justify-center space-x-2 ${
-                !uploadingReceipt
+                !uploadingReceipt && paymentMethod && receiptImageUrl
                   ? 'glass border border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                   : 'glass border border-cafe-primary/20 text-cafe-textMuted cursor-not-allowed'
               }`}
@@ -774,15 +804,16 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
               )}
             </button>
 
+            {/* Place Order button - requires payment method, receipt, and copy button to be clicked */}
             <button
               onClick={handlePlaceOrder}
-              disabled={!paymentMethod || !receiptImageUrl || uploadingReceipt}
+              disabled={!paymentMethod || !receiptImageUrl || uploadingReceipt || !hasCopiedMessage}
               className={`w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
-                paymentMethod && receiptImageUrl && !uploadingReceipt
+                paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage
                   ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                   : 'glass text-cafe-textMuted cursor-not-allowed'
               }`}
-              style={paymentMethod && receiptImageUrl && !uploadingReceipt ? { backgroundColor: '#1E7ACB' } : {}}
+              style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#1E7ACB' } : {}}
             >
               {uploadingReceipt ? 'Uploading Receipt...' : 'Place Order via Messenger'}
             </button>

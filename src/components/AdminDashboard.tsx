@@ -176,6 +176,13 @@ const AdminDashboard: React.FC = () => {
 
     fetchAdminPassword();
   }, []);
+
+  // Update document title based on site settings
+  useEffect(() => {
+    const siteName = siteSettings?.site_name || 'Tarchier Discounted Shop';
+    document.title = `${siteName} - Admin`;
+  }, [siteSettings]);
+
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);

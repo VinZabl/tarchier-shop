@@ -10,13 +10,21 @@ import FloatingSupportButton from './components/FloatingSupportButton';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import { useMenu } from './hooks/useMenu';
+import { useSiteSettings } from './hooks/useSiteSettings';
 
 function MainApp() {
   const cart = useCart();
   const { menuItems } = useMenu();
+  const { siteSettings } = useSiteSettings();
   const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>('menu');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
+
+  // Update document title based on site settings
+  React.useEffect(() => {
+    const siteName = siteSettings?.site_name || 'Tarchier Discounted Shop';
+    document.title = siteName;
+  }, [siteSettings]);
 
   const handleViewChange = (view: 'menu' | 'cart' | 'checkout') => {
     setCurrentView(view);

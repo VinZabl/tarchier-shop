@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
   // Footer link columns - can be made configurable through site settings later
   const footerColumns = [
     {
-      title: siteSettings?.site_name || 'Kitty Galore Game Credits',
+      title: siteSettings?.site_name || 'Tarchier Discounted Shop',
       links: [
         { label: siteSettings?.site_description || 'Your Perfect Game Credits Destination', url: '#' },
       ]
@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="mt-16" style={{ backgroundColor: '#FFB6C1' }}>
+    <footer className="mt-16" style={{ backgroundColor: '#F5F5F5' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Top Section - Multi-column Links */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-8">
@@ -109,7 +109,7 @@ const Footer: React.FC = () => {
           {/* Copyright - Centered at the bottom */}
           <div className="text-center">
             <p className="text-sm text-gray-700">
-              © {new Date().getFullYear()} {siteSettings?.site_name || 'Kitty Galore Game Credits'}. All rights reserved.
+              © {new Date().getFullYear()} {siteSettings?.site_name || 'Tarchier Discounted Shop'}. All rights reserved.
             </p>
           </div>
         </div>

@@ -236,7 +236,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
           <button
             onClick={() => setIsOrderModalOpen(true)}
             className="px-4 sm:px-6 py-3 sm:py-4 text-white font-semibold hover:opacity-90 transition-all duration-200 flex items-center justify-center whitespace-nowrap"
-            style={{ backgroundColor: '#E74694' }}
+            style={{ backgroundColor: '#145885' }}
           >
             View
           </button>

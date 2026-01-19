@@ -5,21 +5,21 @@ export default {
     extend: {
       colors: {
         cafe: {
-          accent: '#E74694', // Pink accent
+          accent: '#145885', // Blue accent - Tarchier brand color
           dark: '#0A0A0A', // Off-black background
-          cream: '#F5F5F5',
-          beige: '#E5E5E5',
-          latte: '#D5D5D5',
-          espresso: '#E74694',
+          cream: '#FAFAFA', // Off-white
+          beige: '#F5F5F5',
+          latte: '#F0F0F0',
+          espresso: '#145885',
           light: '#1A1A1A',
-          // Kitty Galore theme colors
-          primary: '#E74694', // Pink primary
-          secondary: '#F05BA8', // Slightly lighter pink
-          darkBg: '#FFF5F5', // Off-light pink main background
-          darkCard: '#FFF9F9', // Slightly darker card background
-          glass: 'rgba(231, 70, 148, 0.1)', // Glass effect with accent color
-          text: '#2D1B2E', // Dark text for light background
-          textMuted: '#5A4A5B' // Muted text
+          // Tarchier Discounted Shop theme colors
+          primary: '#145885', // Blue primary - Tarchier brand
+          secondary: '#1E6FA3', // Slightly lighter blue
+          darkBg: '#FAFAFA', // Off-white main background
+          darkCard: '#FFFFFF', // White card background
+          glass: 'rgba(20, 88, 133, 0.1)', // Glass effect with accent color
+          text: '#1A1A1A', // Dark text for light background
+          textMuted: '#666666' // Muted text
         }
       },
       fontFamily: {

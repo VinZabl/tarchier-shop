@@ -137,22 +137,22 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <div 
             className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" 
             style={{
-              background: 'rgba(255, 200, 220, 0.4)',
+              background: 'rgba(250, 250, 250, 0.95)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
-              border: '1.5px solid rgba(255, 182, 193, 0.5)',
-              boxShadow: '0 8px 32px 0 rgba(255, 182, 193, 0.3), 0 2px 8px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.4)'
+              border: '1.5px solid rgba(20, 88, 133, 0.2)',
+              boxShadow: '0 8px 32px 0 rgba(20, 88, 133, 0.15), 0 2px 8px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.8)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div 
               className="flex-shrink-0 p-6 flex items-center justify-between rounded-t-2xl" 
               style={{ 
-                background: 'rgba(255, 200, 220, 0.5)',
+                background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 zIndex: 20,
-                borderBottom: '1.5px solid rgba(255, 182, 193, 0.6)',
+                borderBottom: '1.5px solid rgba(20, 88, 133, 0.2)',
                 boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
               }}
             >
@@ -188,7 +188,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             <div 
               className="flex-1 overflow-y-auto min-h-0 relative" 
               style={{ 
-                background: 'rgba(255, 200, 220, 0.35)',
+                background: 'rgba(250, 250, 250, 0.9)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 WebkitOverflowScrolling: 'touch',
@@ -200,7 +200,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 className="sticky top-0 left-0 right-0 z-10 pointer-events-none"
                 style={{
                   height: '32px',
-                  background: 'linear-gradient(to bottom, rgba(255, 200, 220, 0.5) 0%, rgba(255, 200, 220, 0.35) 20%, rgba(255, 200, 220, 0.2) 50%, transparent 100%)',
+                  background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.95) 0%, rgba(250, 250, 250, 0.9) 20%, rgba(250, 250, 250, 0.7) 50%, transparent 100%)',
                   marginBottom: '-32px'
                 }}
               />

@@ -295,15 +295,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         customFieldsSection = sections.join('\n');
       }
     } else {
-      customFieldsSection = `🎮 IGN: ${customFieldValues['default_ign'] || ''}`;
+      customFieldsSection = `IGN: ${customFieldValues['default_ign'] || ''}`;
     }
 
     const orderDetails = `
-🛒 Kitty Galore Game Credits ORDER
-
 ${customFieldsSection}
 
-📋 ORDER DETAILS:
+ORDER DETAILS:
 ${cartItems.map(item => {
   let itemDetails = `• ${item.name}`;
   if (item.selectedVariation) {
@@ -313,13 +311,11 @@ ${cartItems.map(item => {
   return itemDetails;
 }).join('\n')}
 
-💰 TOTAL: ₱${totalPrice}
+TOTAL: ₱${totalPrice}
 
-💳 Payment: ${selectedPaymentMethod?.name || ''}
+Payment: ${selectedPaymentMethod?.name || ''}
 
-📸 Payment Receipt: ${receiptImageUrl || ''}
-
-Please confirm this order to proceed. Thank you for choosing Kitty Galore Game Credits! 🎮
+Payment Receipt: ${receiptImageUrl || ''}
     `.trim();
 
     return orderDetails;
@@ -461,7 +457,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
 
     const orderDetails = generateOrderMessage();
     const encodedMessage = encodeURIComponent(orderDetails);
-    const messengerUrl = `https://m.me/KGGameCredits?text=${encodedMessage}`;
+    const messengerUrl = `https://m.me/Rnold77?text=${encodedMessage}`;
     
     window.open(messengerUrl, '_blank');
   };
@@ -743,7 +739,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                     ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                     : 'glass text-cafe-textMuted cursor-not-allowed'
                 }`}
-                style={isDetailsValid ? { backgroundColor: '#E74694' } : {}}
+                style={isDetailsValid ? { backgroundColor: '#145885' } : {}}
               >
                 Proceed to Payment
               </button>
@@ -822,7 +818,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                     ? 'border-transparent text-white'
                     : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                 }`}
-                style={paymentMethod === method.id ? { backgroundColor: '#E74694' } : {}}
+                style={paymentMethod === method.id ? { backgroundColor: '#145885' } : {}}
               >
                 {/* Icon on Top */}
                 <div className="relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
@@ -938,7 +934,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                 ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                 : 'glass text-cafe-textMuted cursor-not-allowed'
             }`}
-            style={paymentMethod ? { backgroundColor: '#E74694' } : {}}
+            style={paymentMethod ? { backgroundColor: '#145885' } : {}}
           >
             Confirm
           </button>
@@ -1187,7 +1183,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                     <button
                       onClick={() => setIsOrderModalOpen(true)}
                       className="w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform text-white hover:opacity-90 hover:scale-[1.02]"
-                      style={{ backgroundColor: '#E74694' }}
+                      style={{ backgroundColor: '#145885' }}
                     >
                       <div className="absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-cafe-primary text-white">
                         2
@@ -1207,7 +1203,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                           ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                           : 'glass text-cafe-textMuted cursor-not-allowed'
                       }`}
-                      style={paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder ? { backgroundColor: '#E74694' } : {}}
+                      style={paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder ? { backgroundColor: '#145885' } : {}}
                     >
                       <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder
@@ -1234,7 +1230,7 @@ Please confirm this order to proceed. Thank you for choosing Kitty Galore Game C
                         ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                         : 'glass text-cafe-textMuted cursor-not-allowed'
                     }`}
-                    style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#E74694' } : {}}
+                    style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#145885' } : {}}
                   >
                     {uploadingReceipt ? 'Uploading Receipt...' : 'Place Order via Messenger'}
                   </button>

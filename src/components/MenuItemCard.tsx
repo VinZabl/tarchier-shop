@@ -137,23 +137,23 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <div 
             className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" 
             style={{
-              background: 'rgba(250, 250, 250, 0.95)',
+              background: 'rgba(20, 88, 133, 0.95)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
-              border: '1.5px solid rgba(20, 88, 133, 0.2)',
-              boxShadow: '0 8px 32px 0 rgba(20, 88, 133, 0.15), 0 2px 8px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.8)'
+              border: '1.5px solid rgba(20, 88, 133, 0.3)',
+              boxShadow: '0 8px 32px 0 rgba(20, 88, 133, 0.3), 0 2px 8px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div 
               className="flex-shrink-0 p-6 flex items-center justify-between rounded-t-2xl" 
               style={{ 
-                background: 'rgba(255, 255, 255, 0.95)',
+                background: 'rgba(20, 88, 133, 0.98)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 zIndex: 20,
-                borderBottom: '1.5px solid rgba(20, 88, 133, 0.2)',
-                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                borderBottom: '1.5px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.2)'
               }}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -168,27 +168,27 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-cafe-text">{item.name}</h3>
+                  <h3 className="text-xl font-bold text-white">{item.name}</h3>
                   {item.subtitle && (
-                    <p className="text-sm text-cafe-textMuted mt-1">{item.subtitle}</p>
+                    <p className="text-sm text-white/80 mt-1">{item.subtitle}</p>
                   )}
                   {item.description && (
-                    <p className="text-sm text-cafe-textMuted mt-2">{item.description}</p>
+                    <p className="text-sm text-white/80 mt-2">{item.description}</p>
                   )}
                 </div>
               </div>
               <button
                 onClick={() => setShowCustomization(false)}
-                className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200 flex-shrink-0 ml-2"
+                className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200 flex-shrink-0 ml-2"
               >
-                <X className="h-5 w-5 text-cafe-text" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
 
             <div 
               className="flex-1 overflow-y-auto min-h-0 relative" 
               style={{ 
-                background: 'rgba(250, 250, 250, 0.9)',
+                background: 'rgba(20, 88, 133, 0.95)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 WebkitOverflowScrolling: 'touch',
@@ -200,7 +200,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 className="sticky top-0 left-0 right-0 z-10 pointer-events-none"
                 style={{
                   height: '32px',
-                  background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.95) 0%, rgba(250, 250, 250, 0.9) 20%, rgba(250, 250, 250, 0.7) 50%, transparent 100%)',
+                  background: 'linear-gradient(to bottom, rgba(20, 88, 133, 0.98) 0%, rgba(20, 88, 133, 0.95) 20%, rgba(20, 88, 133, 0.7) 50%, transparent 100%)',
                   marginBottom: '-32px'
                 }}
               />
@@ -252,7 +252,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                         {sortedCategories.map((category, categoryIndex) => (
                           <div key={category}>
                             {/* Category Header */}
-                            <h4 className="text-lg font-bold text-cafe-text mb-3">{category}</h4>
+                            <h4 className="text-lg font-bold text-white mb-3">{category}</h4>
                             
                             {/* Packages Grid */}
                             <div className="grid grid-cols-2 gap-3">
@@ -302,7 +302,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
                             {/* Divider between categories */}
                             {categoryIndex < sortedCategories.length - 1 && (
-                              <div className="border-t border-cafe-primary/30 my-4"></div>
+                              <div className="border-t border-white/20 my-4"></div>
                             )}
                           </div>
                         ))}
@@ -310,7 +310,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                     );
                   })()
                 ) : (
-                  <div className="text-center py-8 text-cafe-textMuted">
+                  <div className="text-center py-8 text-white/80">
                     No currency packages available
                   </div>
                 )}

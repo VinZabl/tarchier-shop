@@ -244,51 +244,57 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     // Build custom fields section grouped by game
     let customFieldsSection = '';
     if (hasAnyCustomFields) {
-      // Group games by their field values (to simplify when bulk input is used)
-      const gamesByFieldValues = new Map<string, { games: string[], fields: Array<{ label: string, value: string }> }>();
+      // Group games by their field VALUES only (not labels) to handle bulk input
+      // This groups games that have the same values even if field labels differ
+      const gamesByFieldValues = new Map<string, { 
+        games: Array<{ name: string, labels: string[] }>, 
+        fieldValues: string[] 
+      }>();
       
       itemsWithCustomFields.forEach(item => {
         // Get all field values for this game (use original menu item ID)
         const originalId = getOriginalMenuItemId(item.id);
-        const fields = item.customFields?.map(field => {
-          const valueKey = `${originalId}_${field.key}`;
+        const fieldValues: string[] = [];
+        const fieldLabels: string[] = [];
+        
+        item.customFields?.forEach((field, fieldIndex) => {
+          const valueKey = `${originalId}_${fieldIndex}_${field.key}`;
           const value = customFieldValues[valueKey] || '';
-          return value ? { label: field.label, value } : null;
-        }).filter(Boolean) as Array<{ label: string, value: string }> || [];
+          if (value) {
+            fieldValues.push(value);
+            fieldLabels.push(field.label);
+          }
+        });
         
-        if (fields.length === 0) return;
+        if (fieldValues.length === 0) return;
         
-        // Create a key based on field values (to group games with same values)
-        const valueKey = fields.map(f => `${f.label}:${f.value}`).join('|');
+        // Create a key based on field VALUES only (not labels) to group by bulk input
+        const valueKey = fieldValues.join('|');
         
         if (!gamesByFieldValues.has(valueKey)) {
-          gamesByFieldValues.set(valueKey, { games: [], fields });
+          gamesByFieldValues.set(valueKey, { games: [], fieldValues });
         }
-        gamesByFieldValues.get(valueKey)!.games.push(item.name);
+        gamesByFieldValues.get(valueKey)!.games.push({ name: item.name, labels: fieldLabels });
       });
       
       // Build the section
       const sections: string[] = [];
-      gamesByFieldValues.forEach(({ games, fields }) => {
-        if (games.length === 0 || fields.length === 0) return;
+      gamesByFieldValues.forEach(({ games, fieldValues }) => {
+        if (games.length === 0 || fieldValues.length === 0) return;
         
-        // Add game names
-        sections.push(games.join('\n'));
+        // Add all game names first (one per line)
+        games.forEach(game => {
+          sections.push(game.name);
+        });
         
-        // If all values are the same, combine into one line
-        const allValuesSame = fields.every(f => f.value === fields[0].value);
-        if (allValuesSame && fields.length > 1) {
-          const labels = fields.map(f => f.label).join(', ');
-          const lastCommaIndex = labels.lastIndexOf(',');
-          const combinedLabels = lastCommaIndex > 0 
-            ? labels.substring(0, lastCommaIndex) + ' &' + labels.substring(lastCommaIndex + 1)
-            : labels;
-          sections.push(`${combinedLabels}: ${fields[0].value}`);
-        } else {
-          // Different values, show each field separately
-          const fieldStrings = fields.map(f => `${f.label}: ${f.value}`).join(', ');
-          sections.push(fieldStrings);
-        }
+        // Show fields with labels from the first game in the group
+        // Since values are the same (bulk input), we only show once
+        const firstGame = games[0];
+        firstGame.labels.forEach((label, index) => {
+          if (fieldValues[index]) {
+            sections.push(`${label}: ${fieldValues[index]}`);
+          }
+        });
       });
       
       if (sections.length > 0) {

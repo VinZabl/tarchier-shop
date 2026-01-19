@@ -135,7 +135,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
         >
           <div className="flex-1 min-w-0">
             {order && (order.status === 'pending' || order.status === 'processing') && (
-              <p className="text-xs text-yellow-200 mb-2 font-light">
+              <p className="text-xs mb-2 font-light" style={{ color: '#145885' }}>
                 Please do not exit this website while your order is being processed
               </p>
             )}

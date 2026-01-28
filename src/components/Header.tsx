@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-xs sm:text-sm md:text-base font-bold text-cafe-text whitespace-nowrap">
+            <span className="text-sm sm:text-base md:text-lg font-bold text-cafe-text whitespace-nowrap">
               Tarchier Discounted Shop
             </span>
           </button>
@@ -44,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
             >
               <ShoppingCart className="h-6 w-6" />
               {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-cafe-primary to-cafe-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-bounce-gentle glow-blue">
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-cafe-primary to-cafe-secondary text-white text-sm rounded-full h-5 w-5 flex items-center justify-center animate-bounce-gentle glow-blue">
                   {cartItemsCount}
                 </span>
               )}

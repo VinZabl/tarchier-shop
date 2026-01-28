@@ -8,6 +8,8 @@ interface PaymentMethodManagerProps {
   onBack: () => void;
 }
 
+const PAYMENT_METHOD_DRAFT_KEY = 'tarchier_admin_payment_method_draft';
+
 const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) => {
   const { 
     paymentMethods, 
@@ -38,12 +40,18 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     };
     fetchAll();
   }, [paymentMethods]);
-  const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit'>('list');
-  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const [newAdminName, setNewAdminName] = useState('');
-  const [showAddAdminForm, setShowAddAdminForm] = useState(false);
-  const [formData, setFormData] = useState({
+
+  const loadDraft = (): { currentView: 'add' | 'edit'; formData: Record<string, unknown>; editingMethodUuidId: string | null } | null => {
+    try {
+      const raw = localStorage.getItem(PAYMENT_METHOD_DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.currentView === 'add' || parsed.currentView === 'edit') && parsed.formData) return parsed;
+    } catch {}
+    return null;
+  };
+
+  const defaultFormData = {
     id: '',
     name: '',
     account_number: '',
@@ -53,7 +61,61 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     active: true,
     sort_order: 0,
     admin_name: ''
+  };
+
+  const draft = loadDraft();
+  const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit'>(draft ? draft.currentView : 'list');
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
+  const [formData, setFormData] = useState(() => {
+    if (draft && draft.formData && typeof draft.formData === 'object') {
+      const fd = draft.formData as Record<string, unknown>;
+      return {
+        id: typeof fd.id === 'string' ? fd.id : defaultFormData.id,
+        name: typeof fd.name === 'string' ? fd.name : defaultFormData.name,
+        account_number: typeof fd.account_number === 'string' ? fd.account_number : defaultFormData.account_number,
+        account_name: typeof fd.account_name === 'string' ? fd.account_name : defaultFormData.account_name,
+        qr_code_url: typeof fd.qr_code_url === 'string' ? fd.qr_code_url : defaultFormData.qr_code_url,
+        icon_url: typeof fd.icon_url === 'string' ? fd.icon_url : defaultFormData.icon_url,
+        active: typeof fd.active === 'boolean' ? fd.active : defaultFormData.active,
+        sort_order: typeof fd.sort_order === 'number' ? fd.sort_order : defaultFormData.sort_order,
+        admin_name: typeof fd.admin_name === 'string' ? fd.admin_name : defaultFormData.admin_name
+      };
+    }
+    return defaultFormData;
   });
+  const restoreEditUuidRef = React.useRef<string | null>(draft?.currentView === 'edit' && draft?.editingMethodUuidId ? draft.editingMethodUuidId : null);
+
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [newAdminName, setNewAdminName] = useState('');
+  const [showAddAdminForm, setShowAddAdminForm] = useState(false);
+
+  // Restore editingMethod when allPaymentMethods loads after a draft restore
+  React.useEffect(() => {
+    if (restoreEditUuidRef.current && allPaymentMethods.length > 0) {
+      const method = allPaymentMethods.find(m => m.uuid_id === restoreEditUuidRef.current);
+      if (method) {
+        setEditingMethod(method);
+      } else {
+        localStorage.removeItem(PAYMENT_METHOD_DRAFT_KEY);
+        setCurrentView('list');
+        setFormData(defaultFormData);
+      }
+      restoreEditUuidRef.current = null;
+    }
+  }, [allPaymentMethods]);
+
+  // Persist draft when in add/edit so refresh doesn't lose the form
+  React.useEffect(() => {
+    if (currentView === 'add' || currentView === 'edit') {
+      localStorage.setItem(PAYMENT_METHOD_DRAFT_KEY, JSON.stringify({
+        currentView,
+        formData,
+        editingMethodUuidId: editingMethod?.uuid_id ?? null
+      }));
+    } else {
+      localStorage.removeItem(PAYMENT_METHOD_DRAFT_KEY);
+    }
+  }, [currentView, formData, editingMethod?.uuid_id]);
 
   // Modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -244,6 +306,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
         await addPaymentMethod(formData);
       }
       await fetchAllPaymentMethods();
+      localStorage.removeItem(PAYMENT_METHOD_DRAFT_KEY);
       setCurrentView('list');
       setEditingMethod(null);
     } catch (error) {
@@ -257,6 +320,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
   };
 
   const handleCancel = () => {
+    localStorage.removeItem(PAYMENT_METHOD_DRAFT_KEY);
     setCurrentView('list');
     setEditingMethod(null);
   };

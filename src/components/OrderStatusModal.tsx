@@ -135,13 +135,13 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
         >
           <div className="flex-1 min-w-0">
             {order && (order.status === 'pending' || order.status === 'processing') && (
-              <p className="text-xs mb-2 font-light" style={{ color: '#145885' }}>
+              <p className="text-sm mb-2 font-light" style={{ color: '#145885' }}>
                 Please do not exit this website while your order is being processed
               </p>
             )}
             <h2 className="text-2xl font-semibold text-cafe-text">Order Status</h2>
             {order && (
-              <p className="text-sm text-cafe-textMuted mt-1">
+              <p className="text-base text-cafe-textMuted mt-1">
                 Order #{order.id.slice(0, 8)}
               </p>
             )}
@@ -205,7 +205,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
                 </span>
               </div>
               {order.created_at && (
-                <p className="text-sm text-cafe-textMuted">
+                <p className="text-base text-cafe-textMuted">
                   {new Date(order.created_at).toLocaleString()}
                 </p>
               )}
@@ -221,7 +221,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
                   className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white/50 hover:bg-white/70 border border-cafe-primary/30 hover:border-cafe-primary/50 transition-all duration-200 group"
                 >
                   <MessageCircle className="h-5 w-5 text-cafe-primary group-hover:scale-110 transition-transform duration-200" />
-                  <span className="text-sm font-medium text-cafe-text group-hover:text-cafe-primary transition-colors duration-200">
+                  <span className="text-base font-medium text-cafe-text group-hover:text-cafe-primary transition-colors duration-200">
                     Having trouble or issues? Tap here to contact us
                   </span>
                 </a>
@@ -250,10 +250,10 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-cafe-text">{item.name}</h4>
                       {item.selectedVariation && (
-                        <p className="text-sm text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
+                        <p className="text-base text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
                       )}
                       {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                        <p className="text-sm text-cafe-textMuted">
+                        <p className="text-base text-cafe-textMuted">
                           Add-ons: {item.selectedAddOns.map(addOn => 
                             addOn.quantity && addOn.quantity > 1 
                               ? `${addOn.name} x${addOn.quantity}`
@@ -261,7 +261,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
                           ).join(', ')}
                         </p>
                       )}
-                      <p className="text-sm text-cafe-textMuted">₱{item.totalPrice} × {item.quantity}</p>
+                      <p className="text-base text-cafe-textMuted">₱{item.totalPrice} × {item.quantity}</p>
                     </div>
                     <div className="flex-shrink-0">
                       <span className="font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</span>
@@ -290,8 +290,8 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
                   }>).map((account, accountIndex) => (
                     <div key={accountIndex} className="pb-4 border-b border-cafe-primary/20 last:border-b-0 last:pb-0">
                       <div className="mb-2">
-                        <p className="text-sm font-semibold text-cafe-text">{account.game}</p>
-                        <p className="text-xs text-cafe-textMuted">Package: {account.package}</p>
+                        <p className="text-base font-semibold text-cafe-text">{account.game}</p>
+                        <p className="text-sm text-cafe-textMuted">Package: {account.package}</p>
                       </div>
                       <div className="space-y-2 mt-2">
                         {Object.entries(account.fields).map(([key, value]) => (
@@ -323,7 +323,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
 
             {/* Footer */}
             <div className="mt-6 pt-4 border-t border-cafe-primary/20">
-              <p className="text-xs text-cafe-textMuted text-center">
+              <p className="text-sm text-cafe-textMuted text-center">
                 by Tarchier Discounted Shop
               </p>
             </div>

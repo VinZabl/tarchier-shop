@@ -104,7 +104,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         <div className="flex-1 min-w-0 flex flex-col justify-center px-3 sm:px-4 py-2.5 sm:py-3 text-left">
           <h4 
             ref={nameRef}
-            className={`text-cafe-text font-bold text-[10px] sm:text-xs mb-0 leading-tight ${
+            className={`text-cafe-text font-bold text-xs sm:text-sm mb-0 leading-tight ${
               shouldScroll ? 'animate-scroll-text' : ''
             }`}
             style={shouldScroll ? {
@@ -123,7 +123,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           </h4>
 
           {item.subtitle && (
-            <p className="text-[10px] text-cafe-textMuted mt-1.5 leading-relaxed">
+            <p className="text-xs text-cafe-textMuted mt-1.5 leading-relaxed">
               {item.subtitle}
             </p>
           )}
@@ -167,9 +167,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                     }}
                   />
                 ) : (
-                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 text-xl">🎮</div>
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 text-2xl">🎮</div>
                 )}
-                <h3 className="flex-1 min-w-0 text-sm font-bold text-white leading-tight">{item.name}</h3>
+                <h3 className="flex-1 min-w-0 text-base font-bold text-white leading-tight">{item.name}</h3>
                 <button
                   onClick={() => setShowCustomization(false)}
                   className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200 flex-shrink-0"
@@ -181,10 +181,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               {(item.subtitle || item.description) && (
                 <div className="space-y-1.5 pl-0">
                   {item.subtitle && (
-                    <p className="text-[10px] text-white/80 leading-relaxed">{item.subtitle}</p>
+                    <p className="text-xs text-white/80 leading-relaxed">{item.subtitle}</p>
                   )}
                   {item.description && (
-                    <p className="text-[10px] text-white/80 leading-relaxed whitespace-pre-line">{item.description}</p>
+                    <p className="text-xs text-white/80 leading-relaxed whitespace-pre-line">{item.description}</p>
                   )}
                 </div>
               )}
@@ -257,7 +257,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                         {sortedCategories.map((category, categoryIndex) => (
                           <div key={category}>
                             {/* Category Header */}
-                            <h4 className="text-xs font-bold text-white mb-3">{category}</h4>
+                            <h4 className="text-sm font-bold text-white mb-3">{category}</h4>
                             
                             {/* Packages Grid */}
                             <div className="grid grid-cols-2 gap-3">
@@ -276,24 +276,24 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                     }}
                                   >
                                     <div className="flex flex-col">
-                                      <div className="font-semibold text-gray-900 text-[10px] mb-1">
+                                      <div className="font-semibold text-gray-900 text-xs mb-1">
                                         {variation.name}
                                       </div>
                                       {variation.description && (
-                                        <div className="text-[9px] text-gray-600 mb-2 line-clamp-2">
+                                        <div className="text-[10px] text-gray-600 mb-2 line-clamp-2">
                                           {variation.description}
                                         </div>
                                       )}
                                       <div className="mt-auto">
-                                        <div className="text-xs font-bold text-gray-900">
+                                        <div className="text-sm font-bold text-gray-900">
                                           ₱{discountedPrice.toFixed(2)}
                                         </div>
                                         {isDiscounted && (
                                           <div className="flex items-center gap-2 mt-1">
-                                            <div className="text-[9px] text-gray-500 line-through">
+                                            <div className="text-[10px] text-gray-500 line-through">
                                               ₱{originalPrice.toFixed(2)}
                                             </div>
-                                            <div className="text-[9px] text-gray-900 font-semibold">
+                                            <div className="text-[10px] text-gray-900 font-semibold">
                                               -{item.discountPercentage}%
                                             </div>
                                           </div>

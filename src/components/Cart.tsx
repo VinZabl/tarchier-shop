@@ -112,11 +112,11 @@ const Cart: React.FC<CartProps> = ({
               }}
             />
           </div>
-          <h2 className="text-xl font-medium text-cafe-text mb-1">Your cart is empty</h2>
-          <p className="text-sm text-cafe-textMuted mb-4">Add some currency packages to get started!</p>
+          <h2 className="text-2xl font-medium text-cafe-text mb-1">Your cart is empty</h2>
+          <p className="text-base text-cafe-textMuted mb-4">Add some currency packages to get started!</p>
           <button
             onClick={onContinueShopping}
-            className="text-white px-4 py-2 text-sm rounded-full hover:opacity-90 transition-all duration-200"
+            className="text-white px-4 py-2 text-base rounded-full hover:opacity-90 transition-all duration-200"
             style={{ backgroundColor: '#145885' }}
           >
             Browse Games
@@ -136,7 +136,7 @@ const Cart: React.FC<CartProps> = ({
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <h1 className="text-xl font-semibold text-cafe-text whitespace-nowrap text-center flex-1">Cart</h1>
+        <h1 className="text-2xl font-semibold text-cafe-text whitespace-nowrap text-center flex-1">Cart</h1>
         <div className="flex items-center gap-1">
           {selectionMode ? (
             <button
@@ -149,7 +149,7 @@ const Cart: React.FC<CartProps> = ({
           ) : (
             <button
               onClick={toggleSelectionMode}
-              className="text-cafe-primary hover:text-cafe-secondary transition-colors duration-200 whitespace-nowrap text-xs font-medium"
+              className="text-cafe-primary hover:text-cafe-secondary transition-colors duration-200 whitespace-nowrap text-sm font-medium"
             >
               Select
             </button>
@@ -161,14 +161,14 @@ const Cart: React.FC<CartProps> = ({
         <div className="flex items-center justify-between mb-3 py-1.5 px-2 glass rounded-lg border border-cafe-primary/30 flex-shrink-0">
           <button
             onClick={selectAll}
-            className="text-xs font-medium text-cafe-text hover:text-cafe-primary transition-colors"
+            className="text-sm font-medium text-cafe-text hover:text-cafe-primary transition-colors"
           >
             {selectedItems.size === cartItems.length ? 'Deselect All' : 'Select All'}
           </button>
           {selectedItems.size > 0 && (
             <button
               onClick={deleteSelected}
-              className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Delete ({selectedItems.size})
@@ -205,9 +205,9 @@ const Cart: React.FC<CartProps> = ({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-1.5">
-                  <h3 className="text-xs font-medium text-cafe-text leading-tight">{item.name}</h3>
+                  <h3 className="text-sm font-medium text-cafe-text leading-tight">{item.name}</h3>
                   <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <p className="text-sm font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
+                    <p className="text-base font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
                     {!selectionMode && (
                       <button
                         type="button"
@@ -219,12 +219,12 @@ const Cart: React.FC<CartProps> = ({
                     )}
                   </div>
                 </div>
-                <p className="text-cafe-textMuted text-[11px] mt-0">₱{item.totalPrice} each</p>
+                <p className="text-cafe-textMuted text-xs mt-0">₱{item.totalPrice} each</p>
                 {item.selectedVariation && (
-                  <p className="text-[11px] text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
+                  <p className="text-xs text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
                 )}
                 {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                  <p className="text-[11px] text-cafe-textMuted">
+                  <p className="text-xs text-cafe-textMuted">
                     Add-ons: {item.selectedAddOns.map(addOn =>
                       addOn.quantity && addOn.quantity > 1 ? `${addOn.name} x${addOn.quantity}` : addOn.name
                     ).join(', ')}
@@ -239,7 +239,7 @@ const Cart: React.FC<CartProps> = ({
                     >
                       <Minus className="h-3 w-3 text-cafe-primary" />
                     </button>
-                    <span className="font-semibold text-cafe-text min-w-[18px] text-center text-[11px]">{item.quantity}</span>
+                    <span className="font-semibold text-cafe-text min-w-[18px] text-center text-xs">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
@@ -256,14 +256,14 @@ const Cart: React.FC<CartProps> = ({
       </div>
 
       <div className="glass-card rounded-lg p-2 flex-shrink-0" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center justify-between text-base font-semibold text-cafe-text mb-2">
+        <div className="flex items-center justify-between text-lg font-semibold text-cafe-text mb-2">
           <span>Total:</span>
           <span className="text-cafe-text">₱{(getTotalPrice() || 0).toFixed(2)}</span>
         </div>
         <div className="flex flex-col sm:flex-row gap-1.5">
           <button
             onClick={onContinueShopping}
-            className="flex-1 text-cafe-text py-2 rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-xs border-2 border-cafe-primary/30"
+            className="flex-1 text-cafe-text py-2 rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-sm border-2 border-cafe-primary/30"
             style={{ backgroundColor: 'transparent' }}
           >
             Add More

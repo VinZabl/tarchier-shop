@@ -23,8 +23,19 @@ const AdminDashboard: React.FC = () => {
   const { categories } = useCategories();
   const { orders } = useOrders();
   const { siteSettings } = useSiteSettings();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders'>('dashboard');
-  
+  const ADMIN_VIEW_KEY = 'tarchier_admin_view';
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders'>(() => {
+    try {
+      const v = localStorage.getItem(ADMIN_VIEW_KEY);
+      if (v && ['dashboard', 'items', 'add', 'edit', 'categories', 'payments', 'settings', 'orders'].includes(v)) return v as 'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders';
+    } catch {}
+    return 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(ADMIN_VIEW_KEY, currentView);
+  }, [currentView]);
+
   // Track viewed order IDs (stored in sessionStorage)
   const [viewedOrderIds, setViewedOrderIds] = useState<Set<string>>(() => {
     const stored = sessionStorage.getItem('viewed_order_ids');

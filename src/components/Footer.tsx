@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-8">
           {footerColumns.map((column, index) => (
             <div key={index} className="flex flex-col">
-              <h4 className="text-sm font-bold text-gray-800 uppercase mb-4">
+              <h4 className="text-base font-bold text-gray-800 uppercase mb-4">
                 {column.title}
               </h4>
               <ul className="space-y-2">
@@ -69,7 +69,7 @@ const Footer: React.FC = () => {
                   <li key={linkIndex}>
                     <a
                       href={link.url}
-                      className="text-xs text-gray-700 hover:text-gray-900 transition-colors duration-200"
+                      className="text-sm text-gray-700 hover:text-gray-900 transition-colors duration-200"
                     >
                       {link.label}
                     </a>
@@ -108,7 +108,7 @@ const Footer: React.FC = () => {
 
           {/* Copyright - Centered at the bottom */}
           <div className="text-center">
-            <p className="text-sm text-gray-700">
+            <p className="text-base text-gray-700">
               © {new Date().getFullYear()} {siteSettings?.site_name || 'Tarchier Discounted Shop'}. All rights reserved.
             </p>
           </div>

@@ -637,7 +637,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
   );
 
   const StepNumber: React.FC<{ n: number }> = ({ n }) => (
-    <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: '#145885' }}>{n}</span>
+    <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#145885' }}>{n}</span>
   );
 
   return (
@@ -650,7 +650,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-xl font-semibold text-cafe-text text-center flex-1">Top Up</h1>
+          <h1 className="text-2xl font-semibold text-cafe-text text-center flex-1">Top Up</h1>
           <div className="w-6" />
         </div>
 
@@ -658,15 +658,15 @@ Payment: ${selectedPaymentMethod?.name || ''}
         <section className="pb-4 mb-4 border-b border-cafe-primary/20">
           <div className="flex items-center gap-2 mb-3">
             <StepNumber n={1} />
-            <h2 className="text-xs font-semibold text-cafe-text">Customer Information</h2>
+            <h2 className="text-sm font-semibold text-cafe-text">Customer Information</h2>
           </div>
             
             <form className="space-y-4">
               {/* Bulk Input Section */}
               {itemsWithCustomFields.length >= 2 && (
                 <div className="mb-4 p-3 glass-strong border border-cafe-primary/30 rounded-lg">
-                  <h3 className="text-sm font-semibold text-cafe-text mb-2">Bulk Input</h3>
-                  <p className="text-[11px] text-cafe-textMuted mb-2">
+                  <h3 className="text-base font-semibold text-cafe-text mb-2">Bulk Input</h3>
+                  <p className="text-xs text-cafe-textMuted mb-2">
                     Select games and fill fields once for all selected games.
                   </p>
                   
@@ -694,9 +694,9 @@ Payment: ${selectedPaymentMethod?.name || ''}
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                           ) : (
-                            <span className="w-6 h-6 rounded bg-cafe-primary/20 flex items-center justify-center text-xs flex-shrink-0">🎮</span>
+                            <span className="w-6 h-6 rounded bg-cafe-primary/20 flex items-center justify-center text-sm flex-shrink-0">🎮</span>
                           )}
-                          <span className="text-xs text-cafe-text">{item.name}</span>
+                          <span className="text-sm text-cafe-text">{item.name}</span>
                         </label>
                       );
                     })}
@@ -707,14 +707,14 @@ Payment: ${selectedPaymentMethod?.name || ''}
                     <div className="space-y-3 mt-3 pt-3 border-t border-cafe-primary/20">
                       {bulkInputFields.map(({ index, field }) => (
                         <div key={index}>
-                          <label className="block text-[11px] font-medium text-cafe-text mb-1">
+                          <label className="block text-xs font-medium text-cafe-text mb-1">
                             {field ? field.label : `Field ${index + 1}`} <span className="text-cafe-textMuted">(Bulk)</span> {field?.required && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="text"
                             value={bulkInputValues[index.toString()] || ''}
                             onChange={(e) => handleBulkInputChange(index.toString(), e.target.value)}
-                            className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-3 py-2 text-sm glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                             placeholder={field?.placeholder || field?.label || `Field ${index + 1}`}
                           />
                         </div>
@@ -740,8 +740,8 @@ Payment: ${selectedPaymentMethod?.name || ''}
                         <span className="w-8 h-8 rounded-lg bg-cafe-primary/20 flex items-center justify-center text-sm flex-shrink-0">🎮</span>
                       )}
                       <div>
-                        <h3 className="text-xs font-semibold text-cafe-text">{item.name}</h3>
-                        <p className="text-[11px] text-cafe-textMuted">Please provide the following information for this game</p>
+                        <h3 className="text-sm font-semibold text-cafe-text">{item.name}</h3>
+                        <p className="text-xs text-cafe-textMuted">Please provide the following information for this game</p>
                       </div>
                     </div>
                     {item.customFields?.map((field, fieldIndex) => {
@@ -751,7 +751,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                       const inputId = `input-${originalId}-${itemIndex}-${fieldIndex}-${field.key}`;
                       return (
                         <div key={`${item.id}-${fieldIndex}-${field.key}`}>
-                          <label htmlFor={inputId} className="block text-[11px] font-medium text-cafe-text mb-1">
+                          <label htmlFor={inputId} className="block text-xs font-medium text-cafe-text mb-1">
                             {field.label} {field.required && <span className="text-red-500">*</span>}
                           </label>
                           <input
@@ -767,7 +767,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                                 [valueKey]: newValue
                               }));
                             }}
-                            className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-3 py-2 text-sm glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                             placeholder={field.placeholder || field.label}
                             required={field.required}
                           />
@@ -778,7 +778,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                 ))
               ) : (
                 <div>
-                  <label className="block text-[11px] font-medium text-cafe-text mb-1">
+                  <label className="block text-xs font-medium text-cafe-text mb-1">
                     IGN <span className="text-red-500">*</span>
                   </label>
                     <input
@@ -794,7 +794,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                           ['default_ign']: newValue
                         }));
                       }}
-                      className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                      className="w-full px-3 py-2 text-sm glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                       placeholder="In game name"
                       required
                     />
@@ -808,7 +808,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
         <section className="pb-4 mb-4 border-b border-cafe-primary/20">
           <div className="flex items-center gap-2 mb-3">
             <StepNumber n={2} />
-            <h2 className="text-xs font-semibold text-cafe-text">Choose Payment Method</h2>
+            <h2 className="text-sm font-semibold text-cafe-text">Choose Payment Method</h2>
           </div>
           
           <div className="grid grid-cols-6 gap-2 mb-4">
@@ -836,7 +836,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                   {method.icon_url ? (
                     <img src={method.icon_url} alt={method.name} className="w-full h-full object-contain p-1" title={method.name} />
                   ) : (
-                    <span className="text-2xl" title={method.name}>💳</span>
+                    <span className="text-3xl" title={method.name}>💳</span>
                   )}
                 </button>
               ))}
@@ -850,10 +850,10 @@ Payment: ${selectedPaymentMethod?.name || ''}
               boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset',
             }}
           >
-            <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#7eb8e0' }}>
+            <p className="text-xs font-semibold mb-1.5" style={{ color: '#7eb8e0' }}>
               Please read
             </p>
-            <p className="text-[11px] text-white leading-relaxed">
+            <p className="text-xs text-white leading-relaxed">
               Pay using any of the methods above → screenshot the receipt → then send to our Messenger after submitting your order.
             </p>
           </div>
@@ -867,7 +867,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                 <button
                   onClick={handleCopyMessage}
                   disabled={!paymentMethod}
-                  className={`w-full py-2.5 rounded-lg font-medium text-xs transition-all duration-200 transform mb-2 flex items-center ${
+                  className={`w-full py-2.5 rounded-lg font-medium text-sm transition-all duration-200 transform mb-2 flex items-center ${
                     paymentMethod
                       ? 'glass border border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                       : 'glass border border-cafe-primary/20 text-cafe-textMuted cursor-not-allowed'
@@ -891,7 +891,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                 <button
                   onClick={handlePlaceOrder}
                   disabled={!paymentMethod || !hasCopiedMessage}
-                  className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all duration-200 transform flex items-center uppercase tracking-wide ${
+                  className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 transform flex items-center uppercase tracking-wide ${
                     paymentMethod && hasCopiedMessage
                       ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                       : 'glass text-cafe-textMuted cursor-not-allowed'
@@ -901,7 +901,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                   <StepNumber n={4} />
                   <span className="flex-1 flex justify-center">Submit Order</span>
                 </button>
-                <p className="text-[11px] text-cafe-textMuted text-center mt-2">
+                <p className="text-xs text-cafe-textMuted text-center mt-2">
                   You'll be redirected to Facebook Messenger to confirm your order.
                 </p>
               </>
@@ -909,12 +909,12 @@ Payment: ${selectedPaymentMethod?.name || ''}
               <>
                 <div className="flex items-center gap-2 mb-3">
                   <StepNumber n={3} />
-                  <h2 className="text-xs font-semibold text-cafe-text">Place Order</h2>
+                  <h2 className="text-sm font-semibold text-cafe-text">Place Order</h2>
                 </div>
                 {existingOrderStatus && existingOrderStatus !== 'approved' && existingOrderStatus !== 'rejected' && (
                   <button
                     onClick={() => setIsOrderModalOpen(true)}
-                    className="w-full py-3 rounded-lg font-medium text-xs transition-all duration-200 transform text-white hover:opacity-90 hover:scale-[1.02] flex items-center justify-center gap-2 mb-2"
+                    className="w-full py-3 rounded-lg font-medium text-sm transition-all duration-200 transform text-white hover:opacity-90 hover:scale-[1.02] flex items-center justify-center gap-2 mb-2"
                     style={{ backgroundColor: '#145885' }}
                   >
                     <Eye className="h-3.5 w-3.5" />
@@ -925,7 +925,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                   <button
                     onClick={handlePlaceOrderDirect}
                     disabled={!paymentMethod || isPlacingOrder}
-                    className={`w-full py-3 rounded-lg font-medium text-xs transition-all duration-200 transform ${
+                    className={`w-full py-3 rounded-lg font-medium text-sm transition-all duration-200 transform ${
                       paymentMethod && !isPlacingOrder
                         ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                         : 'glass text-cafe-textMuted cursor-not-allowed'
@@ -935,7 +935,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                     {isPlacingOrder ? 'Placing Order...' : existingOrderStatus === 'rejected' ? 'Order Again' : 'Place Order'}
                   </button>
                 )}
-                <p className="text-[11px] text-cafe-textMuted text-center mt-2">
+                <p className="text-xs text-cafe-textMuted text-center mt-2">
                   Your order will be processed directly. You can track its status after placing the order.
                 </p>
               </>
@@ -950,7 +950,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
           <div className="bg-cafe-darkCard rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-cafe-primary/30" onClick={(e) => e.stopPropagation()}>
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-semibold text-cafe-text">Payment Details</h3>
+                <h3 className="text-2xl font-semibold text-cafe-text">Payment Details</h3>
                 <button
                   type="button"
                   onClick={() => setShowPaymentDetailsModal(false)}
@@ -960,18 +960,18 @@ Payment: ${selectedPaymentMethod?.name || ''}
                   <X className="h-4 w-4 text-cafe-text" />
                 </button>
               </div>
-              <p className="text-xs text-cafe-textMuted mb-3">
+              <p className="text-sm text-cafe-textMuted mb-3">
                 Press the copy button to copy the number or download the QR code, make a payment, then proceed to place your order.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-base font-semibold text-cafe-text">{selectedPaymentMethod.name}</p>
-                  <p className="text-lg font-semibold text-cafe-text">₱{totalPrice}</p>
+                  <p className="text-lg font-semibold text-cafe-text">{selectedPaymentMethod.name}</p>
+                  <p className="text-xl font-semibold text-cafe-text">₱{totalPrice}</p>
                 </div>
                 <div className="flex flex-wrap gap-4 gap-y-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-xs text-cafe-textMuted">Number:</p>
+                      <p className="text-sm text-cafe-textMuted">Number:</p>
                       <button
                         type="button"
                         onClick={() => handleCopyAccountNumber(selectedPaymentMethod.account_number)}
@@ -981,11 +981,11 @@ Payment: ${selectedPaymentMethod?.name || ''}
                         {copiedAccountNumber ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-cafe-text" />}
                       </button>
                     </div>
-                    <p className="font-mono text-cafe-text font-medium text-sm break-all">{selectedPaymentMethod.account_number}</p>
+                    <p className="font-mono text-cafe-text font-medium text-base break-all">{selectedPaymentMethod.account_number}</p>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-xs text-cafe-textMuted">Name:</p>
+                      <p className="text-sm text-cafe-textMuted">Name:</p>
                       <button
                         type="button"
                         onClick={() => handleCopyAccountName(selectedPaymentMethod.account_name)}
@@ -995,17 +995,17 @@ Payment: ${selectedPaymentMethod?.name || ''}
                         {copiedAccountName ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-cafe-text" />}
                       </button>
                     </div>
-                    <p className="font-mono text-cafe-text font-medium text-sm break-words">{selectedPaymentMethod.account_name}</p>
+                    <p className="font-mono text-cafe-text font-medium text-base break-words">{selectedPaymentMethod.account_name}</p>
                   </div>
                 </div>
-                <p className="font-medium text-sm text-cafe-text text-center">Other Option</p>
+                <p className="font-medium text-base text-cafe-text text-center">Other Option</p>
                 {selectedPaymentMethod.qr_code_url ? (
                   <div className="flex flex-col items-center gap-1.5">
                     {!isMessengerBrowser && (
                       <button
                         type="button"
                         onClick={() => handleDownloadQRCode(selectedPaymentMethod.qr_code_url, selectedPaymentMethod.name)}
-                        className="px-2 py-1 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-xs font-medium text-cafe-text flex items-center gap-1.5"
+                        className="px-2 py-1 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-sm font-medium text-cafe-text flex items-center gap-1.5"
                         title="Download QR code"
                       >
                         <Download className="h-3.5 w-3.5" />
@@ -1013,7 +1013,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                       </button>
                     )}
                     {isMessengerBrowser && (
-                      <p className="text-[11px] text-cafe-textMuted text-center">Long-press the QR code to save</p>
+                      <p className="text-xs text-cafe-textMuted text-center">Long-press the QR code to save</p>
                     )}
                     <img
                       src={selectedPaymentMethod.qr_code_url}
@@ -1022,7 +1022,7 @@ Payment: ${selectedPaymentMethod?.name || ''}
                     />
                   </div>
                 ) : (
-                  <p className="text-xs text-cafe-textMuted text-center py-3">No QR Code Available</p>
+                  <p className="text-sm text-cafe-textMuted text-center py-3">No QR Code Available</p>
                 )}
               </div>
             </div>

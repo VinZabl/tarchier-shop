@@ -843,14 +843,14 @@ Payment: ${selectedPaymentMethod?.name || ''}
           </div>
 
           <div
-            className="rounded-xl p-4 border-2"
+            className="rounded-lg px-3 py-2 border-2"
             style={{
               backgroundColor: '#145885',
               borderColor: 'rgba(20, 88, 133, 0.6)',
               boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset',
             }}
           >
-            <p className="text-xs font-semibold mb-1.5" style={{ color: '#7eb8e0' }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: '#7eb8e0' }}>
               Please read
             </p>
             <p className="text-xs text-white leading-relaxed">

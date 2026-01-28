@@ -14,33 +14,113 @@ interface CheckoutProps {
   onNavigateToMenu?: () => void; // Callback to navigate to menu (e.g., after order succeeded)
 }
 
+// Visible in DOM to confirm new checkout is loaded (dev)
+const CHECKOUT_DATA_ATTR = { 'data-checkout-version': '2' };
+
+const CHECKOUT_STORAGE_KEYS = {
+  paymentMethodId: 'tarchier_checkout_paymentMethodId',
+  customFieldValues: 'tarchier_checkout_customFieldValues',
+  receiptImageUrl: 'tarchier_checkout_receiptImageUrl',
+  receiptPreview: 'tarchier_checkout_receiptPreview',
+  bulkInputValues: 'tarchier_checkout_bulkInputValues',
+  bulkSelectedGames: 'tarchier_checkout_bulkSelectedGames',
+};
+
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNavigateToMenu }) => {
   const { paymentMethods } = usePaymentMethods();
   const { uploadImage, uploading: uploadingReceipt } = useImageUpload();
   const { createOrder, fetchOrderById } = useOrders();
   const { siteSettings } = useSiteSettings();
   const orderOption = siteSettings?.order_option || 'order_via_messenger';
-  const [step, setStep] = useState<'details' | 'payment' | 'order'>('details');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
-  const paymentDetailsRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
   const [, setShowScrollIndicator] = useState(true);
-  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(CHECKOUT_STORAGE_KEYS.customFieldValues);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(() =>
+    localStorage.getItem(CHECKOUT_STORAGE_KEYS.receiptImageUrl)
+  );
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(() =>
+    localStorage.getItem(CHECKOUT_STORAGE_KEYS.receiptPreview)
+  );
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [hasCopiedMessage, setHasCopiedMessage] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [copiedAccountName, setCopiedAccountName] = useState(false);
-  const [bulkInputValues, setBulkInputValues] = useState<Record<string, string>>({});
-  const [bulkSelectedGames, setBulkSelectedGames] = useState<string[]>([]);
+  const [bulkInputValues, setBulkInputValues] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(CHECKOUT_STORAGE_KEYS.bulkInputValues);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [bulkSelectedGames, setBulkSelectedGames] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(CHECKOUT_STORAGE_KEYS.bulkSelectedGames);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [existingOrderStatus, setExistingOrderStatus] = useState<OrderStatus | null>(null);
   const [, setIsCheckingExistingOrder] = useState(true);
+
+  const [showPaymentDetailsModal, setShowPaymentDetailsModal] = useState(false);
+
+  // Restore saved payment method from localStorage (store object like repository)
+  useEffect(() => {
+    const savedId = localStorage.getItem(CHECKOUT_STORAGE_KEYS.paymentMethodId);
+    if (savedId && paymentMethods.length > 0) {
+      const method = paymentMethods.find(m => m.id === savedId);
+      if (method) {
+        if (method.max_order_amount != null && totalPrice >= method.max_order_amount) {
+          localStorage.removeItem(CHECKOUT_STORAGE_KEYS.paymentMethodId);
+        } else {
+          setPaymentMethod(method);
+        }
+      }
+    }
+  }, [paymentMethods, totalPrice]);
+
+  // Persist checkout state to localStorage
+  useEffect(() => {
+    localStorage.setItem(CHECKOUT_STORAGE_KEYS.customFieldValues, JSON.stringify(customFieldValues));
+  }, [customFieldValues]);
+  useEffect(() => {
+    if (receiptImageUrl) localStorage.setItem(CHECKOUT_STORAGE_KEYS.receiptImageUrl, receiptImageUrl);
+    else localStorage.removeItem(CHECKOUT_STORAGE_KEYS.receiptImageUrl);
+  }, [receiptImageUrl]);
+  useEffect(() => {
+    if (receiptPreview) localStorage.setItem(CHECKOUT_STORAGE_KEYS.receiptPreview, receiptPreview);
+    else localStorage.removeItem(CHECKOUT_STORAGE_KEYS.receiptPreview);
+  }, [receiptPreview]);
+  useEffect(() => {
+    localStorage.setItem(CHECKOUT_STORAGE_KEYS.bulkInputValues, JSON.stringify(bulkInputValues));
+  }, [bulkInputValues]);
+  useEffect(() => {
+    localStorage.setItem(CHECKOUT_STORAGE_KEYS.bulkSelectedGames, JSON.stringify(bulkSelectedGames));
+  }, [bulkSelectedGames]);
+  useEffect(() => {
+    if (paymentMethod) localStorage.setItem(CHECKOUT_STORAGE_KEYS.paymentMethodId, paymentMethod.id);
+    else localStorage.removeItem(CHECKOUT_STORAGE_KEYS.paymentMethodId);
+  }, [paymentMethod]);
+
+  // Show payment details modal when payment method is selected (repository behavior)
+  useEffect(() => {
+    if (paymentMethod) setShowPaymentDetailsModal(true);
+  }, [paymentMethod]);
 
   // Extract original menu item ID from cart item ID (format: "menuItemId:::CART:::timestamp-random")
   // This allows us to group all packages from the same game together
@@ -137,20 +217,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [step]);
-
-  // Auto-scroll to payment details when payment method is selected
-  React.useEffect(() => {
-    if (paymentMethod && paymentDetailsRef.current) {
-      setShowScrollIndicator(true); // Reset to show indicator when payment method is selected
-      setTimeout(() => {
-        paymentDetailsRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }, 100);
-    }
-  }, [paymentMethod]);
+  }, []);
 
   // Check if buttons section is visible to hide scroll indicator
   React.useEffect(() => {
@@ -178,9 +245,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     return () => {
       observer.disconnect();
     };
-  }, [step]);
+  }, []);
 
-  const selectedPaymentMethod = paymentMethods.find(method => method.id === paymentMethod);
+  const selectedPaymentMethod = paymentMethod;
   
   const handleBulkInputChange = (fieldKey: string, value: string) => {
     setBulkInputValues(prev => ({ ...prev, [fieldKey]: value }));
@@ -196,17 +263,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     }
   };
 
-  const handleProceedToPayment = () => {
-    setStep('payment');
-  };
-
-  const handleProceedToOrder = () => {
-    if (!paymentMethod) {
-      setReceiptError('Please select a payment method');
-      return;
-    }
-    setStep('order');
-  };
+  // Single-page layout - no step navigation
 
   const handleReceiptUpload = async (file: File) => {
     try {
@@ -320,8 +377,6 @@ ${cartItems.map(item => {
 TOTAL: ₱${totalPrice}
 
 Payment: ${selectedPaymentMethod?.name || ''}
-
-Payment Receipt: ${receiptImageUrl || ''}
     `.trim();
 
     return orderDetails;
@@ -455,11 +510,6 @@ Payment Receipt: ${receiptImageUrl || ''}
       setReceiptError('Please select a payment method');
       return;
     }
-    
-    if (!receiptImageUrl) {
-      setReceiptError('Please upload your payment receipt before placing the order');
-      return;
-    }
 
     const orderDetails = generateOrderMessage();
     const encodedMessage = encodeURIComponent(orderDetails);
@@ -471,11 +521,6 @@ Payment Receipt: ${receiptImageUrl || ''}
   const handlePlaceOrderDirect = async () => {
     if (!paymentMethod) {
       setReceiptError('Please select a payment method');
-      return;
-    }
-    
-    if (!receiptImageUrl) {
-      setReceiptError('Please upload your payment receipt before placing the order');
       return;
     }
 
@@ -520,7 +565,7 @@ Payment Receipt: ${receiptImageUrl || ''}
         order_items: cartItems,
         customer_info: customerInfo as Record<string, string | unknown>,
         payment_method_id: selectedPaymentMethod.id,
-        receipt_url: receiptImageUrl,
+        receipt_url: '',
         total_price: totalPrice,
       });
 
@@ -591,45 +636,42 @@ Payment Receipt: ${receiptImageUrl || ''}
     />
   );
 
-  if (step === 'details') {
-    return (
-      <>
-        <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
+  const StepNumber: React.FC<{ n: number }> = ({ n }) => (
+    <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: '#145885' }}>{n}</span>
+  );
+
+  return (
+    <>
+      <div className="max-w-2xl mx-auto px-3 py-4 pb-20" {...CHECKOUT_DATA_ATTR}>
+        <div className="flex items-center mb-4">
           <button
             onClick={onBack}
-            className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
+            className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 p-1"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-3xl font-semibold text-cafe-text text-center flex-1">Order Details</h1>
+          <h1 className="text-xl font-semibold text-cafe-text text-center flex-1">Top Up</h1>
+          <div className="w-6" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Customer Details Form */}
-          <div className="glass-card rounded-xl p-6">
-            <h2 className="text-2xl font-medium text-cafe-text mb-6">Customer Information</h2>
+        {/* Section 1: Customer Information */}
+        <section className="pb-4 mb-4 border-b border-cafe-primary/20">
+          <div className="flex items-center gap-2 mb-3">
+            <StepNumber n={1} />
+            <h2 className="text-xs font-semibold text-cafe-text">Customer Information</h2>
+          </div>
             
-            <form className="space-y-6">
-              {/* Show count of items with custom fields */}
-              {hasAnyCustomFields && itemsWithCustomFields.length > 0 && (
-                <div className="mb-4 p-3 glass border border-cafe-primary/30 rounded-lg">
-                  <p className="text-sm text-cafe-text">
-                    <span className="font-semibold">{itemsWithCustomFields.length}</span> game{itemsWithCustomFields.length > 1 ? 's' : ''} require{itemsWithCustomFields.length === 1 ? 's' : ''} additional information
-                  </p>
-                </div>
-              )}
-
+            <form className="space-y-4">
               {/* Bulk Input Section */}
               {itemsWithCustomFields.length >= 2 && (
-                <div className="mb-6 p-4 glass-strong border border-cafe-primary/30 rounded-lg">
-                  <h3 className="text-lg font-semibold text-cafe-text mb-4">Bulk Input</h3>
-                  <p className="text-sm text-cafe-textMuted mb-4">
+                <div className="mb-4 p-3 glass-strong border border-cafe-primary/30 rounded-lg">
+                  <h3 className="text-sm font-semibold text-cafe-text mb-2">Bulk Input</h3>
+                  <p className="text-[11px] text-cafe-textMuted mb-2">
                     Select games and fill fields once for all selected games.
                   </p>
                   
                   {/* Game Selection Checkboxes */}
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1.5 mb-2">
                     {itemsWithCustomFields.map((item) => {
                       const originalId = getOriginalMenuItemId(item.id);
                       const isSelected = bulkSelectedGames.includes(originalId);
@@ -642,9 +684,19 @@ Payment Receipt: ${receiptImageUrl || ''}
                             type="checkbox"
                             checked={isSelected}
                             onChange={(e) => handleBulkGameSelectionChange(item.id, e.target.checked)}
-                            className="w-4 h-4 text-cafe-primary border-cafe-primary/30 rounded focus:ring-cafe-primary"
+                            className="w-3.5 h-3.5 text-cafe-primary border-cafe-primary/30 rounded focus:ring-cafe-primary"
                           />
-                          <span className="text-sm text-cafe-text">{item.name}</span>
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt=""
+                              className="w-6 h-6 rounded object-cover flex-shrink-0"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                          ) : (
+                            <span className="w-6 h-6 rounded bg-cafe-primary/20 flex items-center justify-center text-xs flex-shrink-0">🎮</span>
+                          )}
+                          <span className="text-xs text-cafe-text">{item.name}</span>
                         </label>
                       );
                     })}
@@ -652,17 +704,17 @@ Payment Receipt: ${receiptImageUrl || ''}
 
                   {/* Input Fields - Only show if games are selected */}
                   {bulkSelectedGames.length > 0 && bulkInputFields.length > 0 && (
-                    <div className="space-y-4 mt-4 pt-4 border-t border-cafe-primary/20">
+                    <div className="space-y-3 mt-3 pt-3 border-t border-cafe-primary/20">
                       {bulkInputFields.map(({ index, field }) => (
                         <div key={index}>
-                          <label className="block text-sm font-medium text-cafe-text mb-2">
+                          <label className="block text-[11px] font-medium text-cafe-text mb-1">
                             {field ? field.label : `Field ${index + 1}`} <span className="text-cafe-textMuted">(Bulk)</span> {field?.required && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="text"
                             value={bulkInputValues[index.toString()] || ''}
                             onChange={(e) => handleBulkInputChange(index.toString(), e.target.value)}
-                            className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                             placeholder={field?.placeholder || field?.label || `Field ${index + 1}`}
                           />
                         </div>
@@ -675,10 +727,22 @@ Payment Receipt: ${receiptImageUrl || ''}
               {/* Dynamic Custom Fields grouped by game */}
               {hasAnyCustomFields ? (
                 itemsWithCustomFields.map((item, itemIndex) => (
-                  <div key={item.id} className="space-y-4 pb-6 border-b border-cafe-primary/20 last:border-b-0 last:pb-0">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-cafe-text">{item.name}</h3>
-                      <p className="text-sm text-cafe-textMuted">Please provide the following information for this game</p>
+                  <div key={item.id} className="space-y-3 pb-4 border-b border-cafe-primary/20 last:border-b-0 last:pb-0">
+                    <div className="mb-2 flex items-center gap-2">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt=""
+                          className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span className="w-8 h-8 rounded-lg bg-cafe-primary/20 flex items-center justify-center text-sm flex-shrink-0">🎮</span>
+                      )}
+                      <div>
+                        <h3 className="text-xs font-semibold text-cafe-text">{item.name}</h3>
+                        <p className="text-[11px] text-cafe-textMuted">Please provide the following information for this game</p>
+                      </div>
                     </div>
                     {item.customFields?.map((field, fieldIndex) => {
                       const originalId = getOriginalMenuItemId(item.id);
@@ -687,7 +751,7 @@ Payment Receipt: ${receiptImageUrl || ''}
                       const inputId = `input-${originalId}-${itemIndex}-${fieldIndex}-${field.key}`;
                       return (
                         <div key={`${item.id}-${fieldIndex}-${field.key}`}>
-                          <label htmlFor={inputId} className="block text-sm font-medium text-cafe-text mb-2">
+                          <label htmlFor={inputId} className="block text-[11px] font-medium text-cafe-text mb-1">
                             {field.label} {field.required && <span className="text-red-500">*</span>}
                           </label>
                           <input
@@ -703,7 +767,7 @@ Payment Receipt: ${receiptImageUrl || ''}
                                 [valueKey]: newValue
                               }));
                             }}
-                            className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                             placeholder={field.placeholder || field.label}
                             required={field.required}
                           />
@@ -714,7 +778,7 @@ Payment Receipt: ${receiptImageUrl || ''}
                 ))
               ) : (
                 <div>
-                  <label className="block text-sm font-medium text-cafe-text mb-2">
+                  <label className="block text-[11px] font-medium text-cafe-text mb-1">
                     IGN <span className="text-red-500">*</span>
                   </label>
                     <input
@@ -730,532 +794,245 @@ Payment Receipt: ${receiptImageUrl || ''}
                           ['default_ign']: newValue
                         }));
                       }}
-                      className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                      className="w-full px-3 py-2 text-xs glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
                       placeholder="In game name"
                       required
                     />
                 </div>
               )}
 
-              <button
-                onClick={handleProceedToPayment}
-                disabled={!isDetailsValid}
-                className={`w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
-                  isDetailsValid
-                    ? 'text-white hover:opacity-90 hover:scale-[1.02]'
-                    : 'glass text-cafe-textMuted cursor-not-allowed'
-                }`}
-                style={isDetailsValid ? { backgroundColor: '#145885' } : {}}
-              >
-                Proceed to Payment
-              </button>
             </form>
+        </section>
+
+        {/* Section 2: Choose Payment Method */}
+        <section className="pb-4 mb-4 border-b border-cafe-primary/20">
+          <div className="flex items-center gap-2 mb-3">
+            <StepNumber n={2} />
+            <h2 className="text-xs font-semibold text-cafe-text">Choose Payment Method</h2>
           </div>
-
-          {/* Order Summary */}
-          <div className="glass-card rounded-xl p-6">
-            <h2 className="text-2xl font-medium text-cafe-text mb-6">Order Summary</h2>
-            
-            <div className="space-y-4 mb-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2 border-b border-cafe-primary/30">
-                  <div>
-                    <h4 className="font-medium text-cafe-text">{item.name}</h4>
-                    {item.selectedVariation && (
-                      <p className="text-sm text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
-                    )}
-                    {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                      <p className="text-sm text-cafe-textMuted">
-                        Add-ons: {item.selectedAddOns.map(addOn => addOn.name).join(', ')}
-                      </p>
-                    )}
-                    <p className="text-sm text-cafe-textMuted">₱{item.totalPrice} x {item.quantity}</p>
-                  </div>
-                  <span className="font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="border-t border-cafe-primary/30 pt-4">
-              <div className="flex items-center justify-between text-2xl font-semibold text-cafe-text">
-                <span>Total:</span>
-                <span className="text-cafe-text">₱{totalPrice}</span>
-              </div>
-            </div>
-            
-          </div>
-        </div>
-      </div>
-        {renderOrderStatusModal()}
-      </>
-    );
-  }
-
-  // Payment Step
-  if (step === 'payment') {
-    return (
-      <>
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center mb-8">
-        <button
-          onClick={() => setStep('details')}
-          className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-3xl font-semibold text-cafe-text text-center flex-1">Payment</h1>
-      </div>
-
-      <div className="max-w-2xl mx-auto">
-        {/* Payment Method Selection */}
-        <div className="glass-card rounded-xl p-6">
-          <h2 className="text-2xl font-medium text-cafe-text mb-6">Choose Payment Method</h2>
           
-          <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
-            {paymentMethods.map((method) => (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => {
-                  setPaymentMethod(method.id as PaymentMethod);
-                }}
-                className={`p-2 md:p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
-                  paymentMethod === method.id
-                    ? 'border-transparent text-white'
-                    : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
-                }`}
-                style={paymentMethod === method.id ? { backgroundColor: '#145885' } : {}}
-              >
-                {/* Icon on Top */}
-                <div className="relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
-                  <span className="text-xl md:text-2xl">💳</span>
-                </div>
-                {/* Text Below */}
-                <span className="font-medium text-xs md:text-sm text-center">{method.name}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-6 gap-2 mb-4">
+            {paymentMethods
+              .filter((method) => {
+                if (method.max_order_amount != null && method.max_order_amount !== undefined)
+                  return totalPrice < method.max_order_amount;
+                return true;
+              })
+              .map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod(method);
+                    setShowPaymentDetailsModal(true);
+                  }}
+                  className={`aspect-square w-full rounded-xl border-2 transition-all duration-200 flex items-center justify-center overflow-hidden ${
+                    selectedPaymentMethod?.id === method.id
+                      ? 'border-cafe-primary ring-2 ring-cafe-primary/50'
+                      : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
+                  }`}
+                  style={selectedPaymentMethod?.id === method.id ? { backgroundColor: '#145885' } : {}}
+                >
+                  {method.icon_url ? (
+                    <img src={method.icon_url} alt={method.name} className="w-full h-full object-contain p-1" title={method.name} />
+                  ) : (
+                    <span className="text-2xl" title={method.name}>💳</span>
+                  )}
+                </button>
+              ))}
           </div>
 
-          {/* Payment Details with QR Code */}
-          {selectedPaymentMethod && (
-            <div 
-              ref={paymentDetailsRef}
-              className="glass-strong rounded-lg p-6 mb-6 border border-cafe-primary/30"
-            >
-              <h3 className="font-medium text-cafe-text mb-4">Payment Details</h3>
-              <div className="space-y-4">
-                {/* Payment Method Name */}
-                <div>
-                  <p className="text-lg font-semibold text-cafe-text">{selectedPaymentMethod.name}</p>
-                </div>
-                
-                {/* Account Name with Copy Button */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm text-cafe-textMuted">Account Name:</p>
-                    <button
-                      onClick={() => handleCopyAccountName(selectedPaymentMethod.account_name)}
-                      className="px-3 py-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0 text-sm font-medium"
-                      title="Copy account name"
-                    >
-                      {copiedAccountName ? (
-                        <span className="text-green-400">Copied!</span>
-                      ) : (
-                        <span className="text-cafe-text">Copy</span>
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-cafe-text font-medium">{selectedPaymentMethod.account_name}</p>
-                </div>
-                
-                {/* Other Option */}
-                <div>
-                  <h3 className="font-medium text-cafe-text text-center">Other Option</h3>
-                </div>
-                
-                {/* Download QR Button and QR Image */}
-                <div className="flex flex-col items-center gap-3">
-                  {selectedPaymentMethod.qr_code_url ? (
-                    <>
-                      {!isMessengerBrowser && (
-                        <button
-                          onClick={() => handleDownloadQRCode(selectedPaymentMethod.qr_code_url, selectedPaymentMethod.name)}
-                          className="px-3 py-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-sm font-medium text-cafe-text flex items-center gap-2"
-                          title="Download QR code"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>Download QR</span>
-                        </button>
-                      )}
-                      {isMessengerBrowser && (
-                        <p className="text-xs text-cafe-textMuted text-center">Long-press the QR code to save</p>
-                      )}
-                      <img 
-                        src={selectedPaymentMethod.qr_code_url} 
-                        alt={`${selectedPaymentMethod.name} QR Code`}
-                        className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm"
-                      />
-                    </>
-                  ) : (
-                    <div className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm bg-gray-100 flex items-center justify-center p-4">
-                      <p className="text-sm text-cafe-textMuted text-center">QR code not available</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Account Number with Copy Button */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm text-cafe-textMuted">Account Number:</p>
-                    <button
-                      onClick={() => handleCopyAccountNumber(selectedPaymentMethod.account_number)}
-                      className="px-3 py-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0 text-sm font-medium"
-                      title="Copy account number"
-                    >
-                      {copiedAccountNumber ? (
-                        <span className="text-green-400">Copied!</span>
-                      ) : (
-                        <span className="text-cafe-text">Copy</span>
-                      )}
-                    </button>
-                  </div>
-                  <p className="font-mono text-cafe-text font-medium text-xl md:text-2xl">{selectedPaymentMethod.account_number}</p>
-                </div>
-                
-                {/* Amount and Instructions */}
-                <div className="pt-2 border-t border-cafe-primary/20">
-                  <p className="text-xl font-semibold text-cafe-text mb-2">Amount: ₱{totalPrice}</p>
-                  <p className="text-sm text-cafe-textMuted">Press the copy button to copy the account number or download the QR code, make your payment, then click "Confirm" to proceed to the order page where you can upload your payment receipt.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Confirm Button */}
-          <button
-            onClick={handleProceedToOrder}
-            disabled={!paymentMethod}
-            className={`w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform mb-6 ${
-              paymentMethod
-                ? 'text-white hover:opacity-90 hover:scale-[1.02]'
-                : 'glass text-cafe-textMuted cursor-not-allowed'
-            }`}
-            style={paymentMethod ? { backgroundColor: '#145885' } : {}}
+          <div
+            className="rounded-xl p-4 border-2"
+            style={{
+              backgroundColor: '#145885',
+              borderColor: 'rgba(20, 88, 133, 0.6)',
+              boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset',
+            }}
           >
-            Confirm
-          </button>
-
-          {/* Payment instructions */}
-          <div className="glass border border-cafe-primary/30 rounded-lg p-4">
-            <h4 className="font-medium text-cafe-text mb-2">📸 Payment Proof Required</h4>
-            <p className="text-sm text-cafe-textMuted">
-              After making your payment, you'll be able to upload a screenshot of your payment receipt in the next step. This helps us verify and process your order quickly.
+            <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#7eb8e0' }}>
+              Please read
+            </p>
+            <p className="text-[11px] text-white leading-relaxed">
+              Pay using any of the methods above → screenshot the receipt → then send to our Messenger after submitting your order.
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-      {renderOrderStatusModal()}
-      </>
-    );
-  }
+        </section>
 
-  // Order Step
-  if (step === 'order') {
-    return (
-      <>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
-          <button
-            onClick={() => setStep('payment')}
-            className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-3xl font-semibold text-cafe-text text-center flex-1">Order</h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Final Order Summary */}
-          <div className="glass-card rounded-xl p-6">
-            <h2 className="text-2xl font-medium text-cafe-text mb-6">Final Order Summary</h2>
-            
-            <div className="space-y-4 mb-6">
-              <div className="glass-strong rounded-lg p-4 border border-cafe-primary/30">
-                <h4 className="font-medium text-cafe-text mb-2">Customer Details</h4>
-                {hasAnyCustomFields ? (
-                  itemsWithCustomFields.map((item) => {
-                    const originalId = getOriginalMenuItemId(item.id);
-                    const fields = item.customFields?.map((field, fieldIndex) => {
-                      // Use fieldIndex to ensure uniqueness even if field.key is duplicated
-                      const valueKey = `${originalId}_${fieldIndex}_${field.key}`;
-                      const value = customFieldValues[valueKey];
-                      return value ? (
-                        <p key={valueKey} className="text-sm text-cafe-textMuted">
-                          {field.label}: {value}
-                        </p>
-                      ) : null;
-                    }).filter(Boolean);
-                    
-                    if (!fields || fields.length === 0) return null;
-                    
-                    return (
-                      <div key={item.id} className="mb-3 pb-3 border-b border-cafe-primary/20 last:border-b-0 last:pb-0">
-                        <p className="text-sm font-semibold text-cafe-text mb-1">{item.name}:</p>
-                        {fields}
-                      </div>
-                    );
-                  })
-                ) : (
-                  customFieldValues['default_ign'] && (
-                    <p className="text-sm text-cafe-textMuted">
-                      IGN: {customFieldValues['default_ign']}
-                    </p>
-                  )
-                )}
-                {/* Payment Method Information */}
-                {selectedPaymentMethod && (
-                  <div className="mt-3 pt-3 border-t border-cafe-primary/20">
-                    <p className="text-sm font-semibold text-cafe-text mb-1">Payment Method:</p>
-                    <p className="text-sm text-cafe-textMuted">{selectedPaymentMethod.name}</p>
-                  </div>
-                )}
-              </div>
-
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 py-2 border-b border-cafe-primary/30">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg relative">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
-                          if (fallback) fallback.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <div className={`absolute inset-0 w-full h-full flex items-center justify-center ${item.image ? 'hidden' : ''} fallback-icon`}>
-                      <div className="text-xl opacity-20 text-gray-400">🎮</div>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-cafe-text">{item.name}</h4>
-                    {item.selectedVariation && (
-                      <p className="text-sm text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
-                    )}
-                    {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                      <p className="text-sm text-cafe-textMuted">
-                        Add-ons: {item.selectedAddOns.map(addOn => 
-                          addOn.quantity && addOn.quantity > 1 
-                            ? `${addOn.name} x${addOn.quantity}`
-                            : addOn.name
-                        ).join(', ')}
-                      </p>
-                    )}
-                    <p className="text-sm text-cafe-textMuted">₱{item.totalPrice} x {item.quantity}</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className="font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="pt-4 mb-6">
-              <div className="flex items-center justify-between text-2xl font-semibold text-cafe-text">
-                <span>Total:</span>
-                <span className="text-cafe-text">₱{totalPrice}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Receipt Upload and Place Order */}
-          <div className="glass-card rounded-xl p-6">
-            <h2 className="text-2xl font-medium text-cafe-text mb-6">Payment Receipt</h2>
-            
-            {/* Receipt Upload Section */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-cafe-text mb-2">
-                Payment Receipt <span className="text-red-400">*</span>
-              </label>
-              
-              {!receiptPreview ? (
-                <div className="relative glass border-2 border-dashed border-cafe-primary/30 rounded-lg p-6 text-center hover:border-cafe-primary transition-colors duration-200">
-                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-cafe-primary text-white">
-                    1
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleReceiptUpload(file);
-                      }
-                    }}
-                    className="hidden"
-                    id="receipt-upload"
-                    disabled={uploadingReceipt}
-                  />
-                  <label
-                    htmlFor="receipt-upload"
-                    className={`cursor-pointer flex flex-col items-center space-y-2 ${uploadingReceipt ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {uploadingReceipt ? (
-                      <>
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cafe-primary"></div>
-                        <span className="text-sm text-cafe-textMuted">Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-cafe-primary" />
-                        <span className="text-sm text-cafe-text">Click to upload receipt</span>
-                        <span className="text-xs text-cafe-textMuted">JPEG, PNG, WebP, or GIF (Max 5MB)</span>
-                      </>
-                    )}
-                  </label>
-                </div>
-              ) : (
-                <div className="relative glass border border-cafe-primary/30 rounded-lg p-4">
-                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-cafe-primary text-white">
-                    1
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <img
-                        src={receiptPreview}
-                        alt="Receipt preview"
-                        className="w-20 h-20 object-cover rounded-lg border border-cafe-primary/30"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-cafe-text truncate">
-                        {receiptFile?.name || 'Receipt uploaded'}
-                      </p>
-                      <p className="text-xs text-cafe-textMuted">
-                        {receiptImageUrl ? '✓ Uploaded successfully' : 'Uploading...'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleReceiptRemove}
-                      className="flex-shrink-0 p-2 glass-strong rounded-lg hover:bg-red-500/20 transition-colors duration-200"
-                      disabled={uploadingReceipt}
-                    >
-                      <X className="h-4 w-4 text-cafe-text" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {receiptError && (
-                <p className="mt-2 text-sm text-red-400">{receiptError}</p>
-              )}
-            </div>
-
-            <div ref={buttonsRef}>
-              {/* Copy button - only show for order_via_messenger */}
-              {orderOption === 'order_via_messenger' && (
+        {/* Section 3 & 4: Place Order */}
+        <section className="pb-4">
+          <div ref={buttonsRef}>
+            {orderOption === 'order_via_messenger' ? (
+              <>
                 <button
                   onClick={handleCopyMessage}
-                  disabled={uploadingReceipt || !paymentMethod || !receiptImageUrl}
-                  className={`w-full py-3 rounded-xl font-medium transition-all duration-200 transform mb-3 flex items-center justify-center space-x-2 ${
-                    !uploadingReceipt && paymentMethod && receiptImageUrl
+                  disabled={!paymentMethod}
+                  className={`w-full py-2.5 rounded-lg font-medium text-xs transition-all duration-200 transform mb-2 flex items-center ${
+                    paymentMethod
                       ? 'glass border border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                       : 'glass border border-cafe-primary/20 text-cafe-textMuted cursor-not-allowed'
                   }`}
                 >
-                  {copied ? (
-                    <>
-                      <Check className="h-5 w-5" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-5 w-5" />
-                      <span>Copy Order Message</span>
-                    </>
-                  )}
+                  <StepNumber n={3} />
+                  <span className="flex-1 flex items-center justify-center gap-2">
+                    {copied ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span>Copy Order Message</span>
+                      </>
+                    )}
+                  </span>
                 </button>
-              )}
-
-              {/* Order placement buttons - different based on order_option */}
-              {orderOption === 'place_order' ? (
-                <>
-                  {/* Direct Order Placement */}
-                  {existingOrderStatus && existingOrderStatus !== 'approved' && existingOrderStatus !== 'rejected' && (
-                    <button
-                      onClick={() => setIsOrderModalOpen(true)}
-                      className="w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform text-white hover:opacity-90 hover:scale-[1.02]"
-                      style={{ backgroundColor: '#145885' }}
-                    >
-                      <div className="absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-cafe-primary text-white">
-                        2
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <Eye className="h-5 w-5" />
-                        View Order
-                      </div>
-                    </button>
-                  )}
-                  {(!existingOrderStatus || existingOrderStatus === 'rejected') && (
-                    <button
-                      onClick={handlePlaceOrderDirect}
-                      disabled={!paymentMethod || !receiptImageUrl || uploadingReceipt || isPlacingOrder}
-                      className={`relative w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
-                        paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder
-                          ? 'text-white hover:opacity-90 hover:scale-[1.02]'
-                          : 'glass text-cafe-textMuted cursor-not-allowed'
-                      }`}
-                      style={paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder ? { backgroundColor: '#145885' } : {}}
-                    >
-                      <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder
-                          ? 'bg-cafe-primary text-white'
-                          : 'bg-cafe-textMuted/30 text-cafe-textMuted'
-                      }`}>
-                        2
-                      </div>
-                      {isPlacingOrder ? 'Placing Order...' : existingOrderStatus === 'rejected' ? 'Order Again' : 'Place Order'}
-                    </button>
-                  )}
-                  <p className="text-xs text-cafe-textMuted text-center mt-3">
-                    Your order will be processed directly. You can track its status after placing the order.
-                  </p>
-                </>
-              ) : (
-                <>
-                  {/* Messenger Order Placement */}
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={!paymentMethod || !hasCopiedMessage}
+                  className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all duration-200 transform flex items-center uppercase tracking-wide ${
+                    paymentMethod && hasCopiedMessage
+                      ? 'text-white hover:opacity-90 hover:scale-[1.02]'
+                      : 'glass text-cafe-textMuted cursor-not-allowed'
+                  }`}
+                  style={paymentMethod && hasCopiedMessage ? { backgroundColor: '#145885' } : {}}
+                >
+                  <StepNumber n={4} />
+                  <span className="flex-1 flex justify-center">Submit Order</span>
+                </button>
+                <p className="text-[11px] text-cafe-textMuted text-center mt-2">
+                  You'll be redirected to Facebook Messenger to confirm your order.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <StepNumber n={3} />
+                  <h2 className="text-xs font-semibold text-cafe-text">Place Order</h2>
+                </div>
+                {existingOrderStatus && existingOrderStatus !== 'approved' && existingOrderStatus !== 'rejected' && (
                   <button
-                    onClick={handlePlaceOrder}
-                    disabled={!paymentMethod || !receiptImageUrl || uploadingReceipt || !hasCopiedMessage}
-                    className={`w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
-                      paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage
+                    onClick={() => setIsOrderModalOpen(true)}
+                    className="w-full py-3 rounded-lg font-medium text-xs transition-all duration-200 transform text-white hover:opacity-90 hover:scale-[1.02] flex items-center justify-center gap-2 mb-2"
+                    style={{ backgroundColor: '#145885' }}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    View Order
+                  </button>
+                )}
+                {(!existingOrderStatus || existingOrderStatus === 'rejected') && (
+                  <button
+                    onClick={handlePlaceOrderDirect}
+                    disabled={!paymentMethod || isPlacingOrder}
+                    className={`w-full py-3 rounded-lg font-medium text-xs transition-all duration-200 transform ${
+                      paymentMethod && !isPlacingOrder
                         ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                         : 'glass text-cafe-textMuted cursor-not-allowed'
                     }`}
-                    style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#145885' } : {}}
+                    style={paymentMethod && !isPlacingOrder ? { backgroundColor: '#145885' } : {}}
                   >
-                    {uploadingReceipt ? 'Uploading Receipt...' : 'Place Order via Messenger'}
+                    {isPlacingOrder ? 'Placing Order...' : existingOrderStatus === 'rejected' ? 'Order Again' : 'Place Order'}
                   </button>
-                  
-                  <p className="text-xs text-cafe-textMuted text-center mt-3">
-                    You'll be redirected to Facebook Messenger to confirm your order. Your receipt has been uploaded and will be included in the message.
-                  </p>
-                </>
-              )}
+                )}
+                <p className="text-[11px] text-cafe-textMuted text-center mt-2">
+                  Your order will be processed directly. You can track its status after placing the order.
+                </p>
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Payment Details Modal - repository layout */}
+      {showPaymentDetailsModal && selectedPaymentMethod && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/50" onClick={() => setShowPaymentDetailsModal(false)}>
+          <div className="bg-cafe-darkCard rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-cafe-primary/30" onClick={(e) => e.stopPropagation()}>
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold text-cafe-text">Payment Details</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentDetailsModal(false)}
+                  className="p-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4 text-cafe-text" />
+                </button>
+              </div>
+              <p className="text-xs text-cafe-textMuted mb-3">
+                Press the copy button to copy the number or download the QR code, make a payment, then proceed to place your order.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-base font-semibold text-cafe-text">{selectedPaymentMethod.name}</p>
+                  <p className="text-lg font-semibold text-cafe-text">₱{totalPrice}</p>
+                </div>
+                <div className="flex flex-wrap gap-4 gap-y-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-xs text-cafe-textMuted">Number:</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAccountNumber(selectedPaymentMethod.account_number)}
+                        className="p-1 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0"
+                        title="Copy account number"
+                      >
+                        {copiedAccountNumber ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-cafe-text" />}
+                      </button>
+                    </div>
+                    <p className="font-mono text-cafe-text font-medium text-sm break-all">{selectedPaymentMethod.account_number}</p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-xs text-cafe-textMuted">Name:</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAccountName(selectedPaymentMethod.account_name)}
+                        className="p-1 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0"
+                        title="Copy account name"
+                      >
+                        {copiedAccountName ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-cafe-text" />}
+                      </button>
+                    </div>
+                    <p className="font-mono text-cafe-text font-medium text-sm break-words">{selectedPaymentMethod.account_name}</p>
+                  </div>
+                </div>
+                <p className="font-medium text-sm text-cafe-text text-center">Other Option</p>
+                {selectedPaymentMethod.qr_code_url ? (
+                  <div className="flex flex-col items-center gap-1.5">
+                    {!isMessengerBrowser && (
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadQRCode(selectedPaymentMethod.qr_code_url, selectedPaymentMethod.name)}
+                        className="px-2 py-1 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-xs font-medium text-cafe-text flex items-center gap-1.5"
+                        title="Download QR code"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download QR
+                      </button>
+                    )}
+                    {isMessengerBrowser && (
+                      <p className="text-[11px] text-cafe-textMuted text-center">Long-press the QR code to save</p>
+                    )}
+                    <img
+                      src={selectedPaymentMethod.qr_code_url}
+                      alt={`${selectedPaymentMethod.name} QR Code`}
+                      className="w-28 h-28 rounded-lg border-2 border-cafe-primary/30"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-cafe-textMuted text-center py-3">No QR Code Available</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-        {renderOrderStatusModal()}
-      </>
-    );
-  }
+      )}
 
-  return null;
+      {renderOrderStatusModal()}
+    </>
+  );
 };
 
 export default Checkout;

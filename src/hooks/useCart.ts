@@ -1,9 +1,31 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CartItem, MenuItem, Variation, AddOn } from '../types';
 
+const CART_STORAGE_KEY = 'tarchier_cart';
+
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export const useCart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(loadCartFromStorage);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Persist cart so it survives refresh / closing the site
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
 
   const calculateItemPrice = (item: MenuItem, variation?: Variation, addOns?: AddOn[]) => {
     let price = item.basePrice;
@@ -104,6 +126,7 @@ export const useCart = () => {
 
   const clearCart = useCallback(() => {
     setCartItems([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
   }, []);
 
   const getTotalPrice = useCallback(() => {

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base font size so repository text sizes reflect in project */
+html {
+  font-size: 17px;
+}
+
 /* Tarchier Discounted Shop Theme Styles */
 /* Glassmorphism utilities */
 .glass {

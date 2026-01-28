@@ -1,6 +1,9 @@
-import React from 'react';
-import { Trash2, Plus, Minus, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Plus, Minus, ArrowLeft, Check, X } from 'lucide-react';
 import { CartItem } from '../types';
+
+const CART_SCROLL_KEY = 'tarchier_cartContainerScrollPos';
+const SKIP_SCROLL_RESTORE_KEY = 'tarchier_skipScrollRestore';
 
 interface CartProps {
   cartItems: CartItem[];
@@ -21,25 +24,99 @@ const Cart: React.FC<CartProps> = ({
   onContinueShopping,
   onCheckout
 }) => {
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const cartScrollRef = useRef<HTMLDivElement>(null);
+  const previousCartItemsLengthRef = useRef(cartItems.length);
+
+  // Restore scroll position when cart opens (unless coming from item added)
+  useEffect(() => {
+    const skipRestore = localStorage.getItem(SKIP_SCROLL_RESTORE_KEY);
+    if (!skipRestore && cartScrollRef.current) {
+      const savedScroll = localStorage.getItem(CART_SCROLL_KEY);
+      if (savedScroll) {
+        setTimeout(() => {
+          if (cartScrollRef.current) {
+            cartScrollRef.current.scrollTop = parseInt(savedScroll, 10);
+          }
+        }, 100);
+      }
+    } else if (skipRestore) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (cartScrollRef.current) {
+        cartScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      localStorage.removeItem(SKIP_SCROLL_RESTORE_KEY);
+    }
+  }, []);
+
+  // Save cart container scroll position
+  useEffect(() => {
+    const el = cartScrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      localStorage.setItem(CART_SCROLL_KEY, String(el.scrollTop));
+    };
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      localStorage.setItem(CART_SCROLL_KEY, String(el.scrollTop));
+    };
+  }, []);
+
+  // Scroll cart container to top when new items are added
+  useEffect(() => {
+    if (cartItems.length > previousCartItemsLengthRef.current && cartScrollRef.current) {
+      cartScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    previousCartItemsLengthRef.current = cartItems.length;
+  }, [cartItems.length]);
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    if (selectionMode) setSelectedItems(new Set());
+  };
+
+  const toggleItemSelection = (itemId: string) => {
+    const next = new Set(selectedItems);
+    if (next.has(itemId)) next.delete(itemId);
+    else next.add(itemId);
+    setSelectedItems(next);
+  };
+
+  const selectAll = () => {
+    if (selectedItems.size === cartItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(cartItems.map(item => item.id)));
+    }
+  };
+
+  const deleteSelected = () => {
+    selectedItems.forEach(id => removeFromCart(id));
+    setSelectedItems(new Set());
+    setSelectionMode(false);
+  };
+
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="text-center py-16">
-          <div className="mb-4 flex justify-center">
-            <img 
-              src="/logo.png" 
+      <div className="max-w-4xl mx-auto px-3 py-6">
+        <div className="text-center py-10">
+          <div className="mb-3 flex justify-center">
+            <img
+              src="/logo.png"
               alt="Tarchier Discounted Shop Logo"
-              className="h-24 sm:h-32 md:h-40 w-auto object-contain"
+              className="h-16 sm:h-20 w-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
           </div>
-          <h2 className="text-2xl font-medium text-cafe-text mb-2">Your cart is empty</h2>
-          <p className="text-cafe-textMuted mb-6">Add some currency packages to get started!</p>
+          <h2 className="text-xl font-medium text-cafe-text mb-1">Your cart is empty</h2>
+          <p className="text-sm text-cafe-textMuted mb-4">Add some currency packages to get started!</p>
           <button
             onClick={onContinueShopping}
-            className="text-white px-6 py-3 rounded-full hover:opacity-90 transition-all duration-200"
+            className="text-white px-4 py-2 text-sm rounded-full hover:opacity-90 transition-all duration-200"
             style={{ backgroundColor: '#145885' }}
           >
             Browse Games
@@ -50,78 +127,127 @@ const Cart: React.FC<CartProps> = ({
   }
 
   return (
-    <div className="flex flex-col max-w-4xl mx-auto px-4 py-8" style={{ maxHeight: 'calc(100vh - 120px)', height: 'calc(100vh - 120px)', minHeight: 0 }}>
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+    <div className="flex flex-col max-w-4xl mx-auto px-3 py-4" style={{ maxHeight: 'calc(100vh - 120px)', height: 'calc(100vh - 120px)', minHeight: 0 }} data-cart-version="2">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <button
           onClick={onContinueShopping}
           aria-label="Back"
-          className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
+          className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 p-1"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </button>
-        <h1 className="text-3xl font-semibold text-cafe-text whitespace-nowrap text-center flex-1">Cart</h1>
-        <button
-          onClick={clearCart}
-          className="text-cafe-primary hover:text-cafe-secondary transition-colors duration-200 whitespace-nowrap"
-        >
-          Clear All
-        </button>
+        <h1 className="text-xl font-semibold text-cafe-text whitespace-nowrap text-center flex-1">Cart</h1>
+        <div className="flex items-center gap-1">
+          {selectionMode ? (
+            <button
+              onClick={toggleSelectionMode}
+              className="p-1.5 text-cafe-primary hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+              aria-label="Cancel selection"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={toggleSelectionMode}
+              className="text-cafe-primary hover:text-cafe-secondary transition-colors duration-200 whitespace-nowrap text-xs font-medium"
+            >
+              Select
+            </button>
+          )}
+        </div>
       </div>
 
-      <div 
-        className="flex-1 overflow-y-auto mb-6 min-h-0"
-        style={{ 
-          WebkitOverflowScrolling: 'touch', 
-          overscrollBehavior: 'contain'
-        }}
+      {selectionMode && (
+        <div className="flex items-center justify-between mb-3 py-1.5 px-2 glass rounded-lg border border-cafe-primary/30 flex-shrink-0">
+          <button
+            onClick={selectAll}
+            className="text-xs font-medium text-cafe-text hover:text-cafe-primary transition-colors"
+          >
+            {selectedItems.size === cartItems.length ? 'Deselect All' : 'Select All'}
+          </button>
+          {selectedItems.size > 0 && (
+            <button
+              onClick={deleteSelected}
+              className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete ({selectedItems.size})
+            </button>
+          )}
+        </div>
+      )}
+
+      <div
+        ref={cartScrollRef}
+        className="flex-1 overflow-y-auto mb-3 min-h-0"
+        style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
       >
-        <div className="glass-card rounded-xl overflow-hidden">
+        <div className="glass-card rounded-lg overflow-hidden">
           {cartItems.map((item, index) => (
-            <div key={item.id} className={`p-6 ${index !== cartItems.length - 1 ? 'border-b border-cafe-primary/30' : ''}`}>
-              <div className="flex">
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-cafe-text mb-1">{item.name}</h3>
-                  {item.selectedVariation && (
-                    <p className="text-sm text-cafe-textMuted mb-1">Package: {item.selectedVariation.name}</p>
-                  )}
-                  {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                    <p className="text-sm text-cafe-textMuted mb-1">
-                      Add-ons: {item.selectedAddOns.map(addOn => 
-                        addOn.quantity && addOn.quantity > 1 
-                          ? `${addOn.name} x${addOn.quantity}`
-                          : addOn.name
-                      ).join(', ')}
-                    </p>
-                  )}
-                  <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice} each</p>
+            <div
+              key={item.id}
+              className={`p-2 flex gap-2 ${index !== cartItems.length - 1 ? 'border-b border-cafe-primary/30' : ''} ${selectionMode ? 'cursor-pointer' : ''}`}
+              onClick={selectionMode ? () => toggleItemSelection(item.id) : undefined}
+            >
+              {selectionMode && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleItemSelection(item.id);
+                  }}
+                  className={`flex items-center justify-center w-3.5 h-3.5 rounded border transition-all duration-200 flex-shrink-0 mt-0.5 ${
+                    selectedItems.has(item.id) ? 'bg-cafe-primary border-cafe-primary text-white' : 'border-cafe-primary/50 bg-transparent'
+                  }`}
+                >
+                  {selectedItems.has(item.id) && <Check className="h-2 w-2" />}
+                </button>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-1.5">
+                  <h3 className="text-xs font-medium text-cafe-text leading-tight">{item.name}</h3>
+                  <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-sm font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
+                    {!selectionMode && (
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.id)}
+                        className="p-1 text-cafe-primary hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center space-x-3 glass rounded-full p-1 border border-cafe-primary/30">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
-                  >
-                    <Minus className="h-4 w-4 text-cafe-primary" />
-                  </button>
-                  <span className="font-semibold text-cafe-text min-w-[32px] text-center">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
-                  >
-                    <Plus className="h-4 w-4 text-cafe-primary" />
-                  </button>
-                </div>
-
-                <div className="flex items-center space-x-4 ml-auto">
-                  <p className="text-lg font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="p-2 text-cafe-primary hover:text-cafe-secondary hover:bg-cafe-primary/20 rounded-full transition-all duration-200"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <p className="text-cafe-textMuted text-[11px] mt-0">₱{item.totalPrice} each</p>
+                {item.selectedVariation && (
+                  <p className="text-[11px] text-cafe-textMuted">Package: {item.selectedVariation.name}</p>
+                )}
+                {item.selectedAddOns && item.selectedAddOns.length > 0 && (
+                  <p className="text-[11px] text-cafe-textMuted">
+                    Add-ons: {item.selectedAddOns.map(addOn =>
+                      addOn.quantity && addOn.quantity > 1 ? `${addOn.name} x${addOn.quantity}` : addOn.name
+                    ).join(', ')}
+                  </p>
+                )}
+                <div className="flex items-center gap-1 mt-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-0 glass rounded-full p-0.5 border border-cafe-primary/30">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="p-0.5 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+                    >
+                      <Minus className="h-3 w-3 text-cafe-primary" />
+                    </button>
+                    <span className="font-semibold text-cafe-text min-w-[18px] text-center text-[11px]">{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="p-0.5 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
+                    >
+                      <Plus className="h-3 w-3 text-cafe-primary" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -129,26 +255,25 @@ const Cart: React.FC<CartProps> = ({
         </div>
       </div>
 
-      <div className="glass-card rounded-xl p-6 flex-shrink-0" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center justify-between text-2xl font-semibold text-cafe-text mb-6">
+      <div className="glass-card rounded-lg p-2 flex-shrink-0" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+        <div className="flex items-center justify-between text-base font-semibold text-cafe-text mb-2">
           <span>Total:</span>
           <span className="text-cafe-text">₱{(getTotalPrice() || 0).toFixed(2)}</span>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-1.5">
           <button
             onClick={onContinueShopping}
-            className="flex-1 text-cafe-text py-4 rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-lg border-2 border-cafe-primary/30"
+            className="flex-1 text-cafe-text py-2 rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-xs border-2 border-cafe-primary/30"
             style={{ backgroundColor: 'transparent' }}
           >
             Add More
           </button>
           <button
             onClick={onCheckout}
-            className="flex-1 text-white py-4 rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-lg"
+            className="flex-1 text-white py-2 rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-xs"
             style={{ backgroundColor: '#145885' }}
           >
-            Continue to Checkout
+            Checkout
           </button>
         </div>
       </div>

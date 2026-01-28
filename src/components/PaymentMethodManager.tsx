@@ -49,6 +49,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     account_number: '',
     account_name: '',
     qr_code_url: '',
+    icon_url: '',
     active: true,
     sort_order: 0,
     admin_name: ''
@@ -151,6 +152,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       account_number: '',
       account_name: '',
       qr_code_url: '',
+      icon_url: '',
       active: true,
       sort_order: nextSortOrder,
       admin_name: adminName || ''
@@ -166,6 +168,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       account_number: method.account_number,
       account_name: method.account_name,
       qr_code_url: method.qr_code_url,
+      icon_url: method.icon_url ?? '',
       active: method.active,
       sort_order: method.sort_order,
       admin_name: method.admin_name || ''
@@ -370,9 +373,21 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
 
               <div>
                 <ImageUpload
+                  label="QR Code"
                   currentImage={formData.qr_code_url}
                   onImageChange={(imageUrl) => setFormData({ ...formData, qr_code_url: imageUrl || '' })}
                 />
+              </div>
+
+              <div>
+                <ImageUpload
+                  label="Payment icon"
+                  currentImage={formData.icon_url}
+                  onImageChange={(imageUrl) => setFormData({ ...formData, icon_url: imageUrl || '' })}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Icon shown on customer checkout (Choose Payment Method). Leave empty for default card icon.
+                </p>
               </div>
 
               <div>

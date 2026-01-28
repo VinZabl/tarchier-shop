@@ -71,13 +71,13 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
   return (
     <>
-      {/* Uniform vertical layout for all items: image on top, title, subtitle */}
+      {/* List view: image left, title + subtitle right with good spacing */}
       <div 
         onClick={handleCardClick}
-        className={`flex flex-col items-center transition-all duration-300 group rounded-xl overflow-hidden ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} glass-card hover:glass-hover`}
+        className={`flex flex-row items-stretch transition-all duration-300 group rounded-xl overflow-hidden ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} glass-card hover:glass-hover`}
       >
-        {/* Game Image Icon on Top - corner to corner */}
-        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg transition-transform duration-300 group-hover:scale-105">
+        {/* Game Image - fixed width on left */}
+        <div className="relative w-20 sm:w-24 flex-shrink-0 aspect-square overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg transition-transform duration-300 group-hover:scale-105">
           {item.image ? (
             <img
               src={item.image}
@@ -93,18 +93,18 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           ) : null}
           <div className={`absolute inset-0 flex items-center justify-center ${item.image ? 'hidden' : ''}`}>
             {!item.available ? (
-              <XCircle className="h-12 w-12 sm:h-16 sm:w-16 opacity-30 text-gray-400" />
+              <XCircle className="h-10 w-10 opacity-30 text-gray-400" />
             ) : (
-              <div className="text-4xl opacity-20 text-gray-400">🎮</div>
+              <div className="text-2xl opacity-20 text-gray-400">🎮</div>
             )}
           </div>
         </div>
-        
-        {/* Game Title and Subtitle - compact padding */}
-        <div className="w-full px-2 py-1.5">
+
+        {/* Title and Subtitle - flex-1 with padding and spacing */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center px-3 sm:px-4 py-2.5 sm:py-3 text-left">
           <h4 
             ref={nameRef}
-            className={`text-cafe-text font-bold text-center text-xs sm:text-sm mb-0 ${
+            className={`text-cafe-text font-bold text-[10px] sm:text-xs mb-0 leading-tight ${
               shouldScroll ? 'animate-scroll-text' : ''
             }`}
             style={shouldScroll ? {
@@ -121,10 +121,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               item.name
             )}
           </h4>
-          
-          {/* Subtitle */}
+
           {item.subtitle && (
-            <p className="text-xs text-cafe-textMuted text-center mt-0.5">
+            <p className="text-[10px] text-cafe-textMuted mt-1.5 leading-relaxed">
               {item.subtitle}
             </p>
           )}
@@ -146,7 +145,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div 
-              className="flex-shrink-0 p-6 flex items-center justify-between rounded-t-2xl" 
+              className="flex-shrink-0 p-4 sm:p-5 rounded-t-2xl space-y-3" 
               style={{ 
                 background: 'rgba(20, 88, 133, 0.98)',
                 backdropFilter: 'blur(24px)',
@@ -156,8 +155,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.2)'
               }}
             >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {item.image && (
+              {/* Row 1: Icon + Game title + Close */}
+              <div className="flex items-center gap-3 min-w-0">
+                {item.image ? (
                   <img 
                     src={item.image} 
                     alt={item.name}
@@ -166,23 +166,28 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                       e.currentTarget.style.display = 'none';
                     }}
                   />
+                ) : (
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 text-xl">🎮</div>
                 )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-white">{item.name}</h3>
+                <h3 className="flex-1 min-w-0 text-sm font-bold text-white leading-tight">{item.name}</h3>
+                <button
+                  onClick={() => setShowCustomization(false)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200 flex-shrink-0"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+              {/* Row 2: Subtitle and description below */}
+              {(item.subtitle || item.description) && (
+                <div className="space-y-1.5 pl-0">
                   {item.subtitle && (
-                    <p className="text-sm text-white/80 mt-1">{item.subtitle}</p>
+                    <p className="text-[10px] text-white/80 leading-relaxed">{item.subtitle}</p>
                   )}
                   {item.description && (
-                    <p className="text-sm text-white/80 mt-2">{item.description}</p>
+                    <p className="text-[10px] text-white/80 leading-relaxed whitespace-pre-line">{item.description}</p>
                   )}
                 </div>
-              </div>
-              <button
-                onClick={() => setShowCustomization(false)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200 flex-shrink-0 ml-2"
-              >
-                <X className="h-5 w-5 text-white" />
-              </button>
+              )}
             </div>
 
             <div 
@@ -252,7 +257,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                         {sortedCategories.map((category, categoryIndex) => (
                           <div key={category}>
                             {/* Category Header */}
-                            <h4 className="text-lg font-bold text-white mb-3">{category}</h4>
+                            <h4 className="text-xs font-bold text-white mb-3">{category}</h4>
                             
                             {/* Packages Grid */}
                             <div className="grid grid-cols-2 gap-3">
@@ -271,24 +276,24 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                     }}
                                   >
                                     <div className="flex flex-col">
-                                      <div className="font-semibold text-gray-900 text-sm mb-1">
+                                      <div className="font-semibold text-gray-900 text-[10px] mb-1">
                                         {variation.name}
                                       </div>
                                       {variation.description && (
-                                        <div className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                        <div className="text-[9px] text-gray-600 mb-2 line-clamp-2">
                                           {variation.description}
                                         </div>
                                       )}
                                       <div className="mt-auto">
-                                        <div className="text-base font-bold text-gray-900">
+                                        <div className="text-xs font-bold text-gray-900">
                                           ₱{discountedPrice.toFixed(2)}
                                         </div>
                                         {isDiscounted && (
                                           <div className="flex items-center gap-2 mt-1">
-                                            <div className="text-xs text-gray-500 line-through">
+                                            <div className="text-[9px] text-gray-500 line-through">
                                               ₱{originalPrice.toFixed(2)}
                                             </div>
-                                            <div className="text-xs text-gray-900 font-semibold">
+                                            <div className="text-[9px] text-gray-900 font-semibold">
                                               -{item.discountPercentage}%
                                             </div>
                                           </div>

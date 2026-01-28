@@ -12,13 +12,52 @@ import AdminDashboard from './components/AdminDashboard';
 import { useMenu } from './hooks/useMenu';
 import { useSiteSettings } from './hooks/useSiteSettings';
 
+const CUSTOMER_VIEW_STORAGE_KEY = 'tarchier_customer_view';
+
+function loadCustomerView(): 'menu' | 'cart' | 'checkout' {
+  try {
+    const v = localStorage.getItem(CUSTOMER_VIEW_STORAGE_KEY);
+    if (v === 'menu' || v === 'cart' || v === 'checkout') return v;
+  } catch {}
+  return 'menu';
+}
+
 function MainApp() {
   const cart = useCart();
   const { menuItems } = useMenu();
   const { siteSettings } = useSiteSettings();
-  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>('menu');
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-  const [searchQuery, setSearchQuery] = React.useState<string>('');
+  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>(loadCustomerView);
+  const [selectedCategory, setSelectedCategory] = React.useState<string>(() => {
+    try {
+      const v = localStorage.getItem('tarchier_menu_category');
+      return v ?? 'all';
+    } catch { return 'all'; }
+  });
+  const [searchQuery, setSearchQuery] = React.useState<string>(() => {
+    try {
+      const v = localStorage.getItem('tarchier_menu_search');
+      return v ?? '';
+    } catch { return ''; }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('tarchier_menu_category', selectedCategory);
+  }, [selectedCategory]);
+  React.useEffect(() => {
+    localStorage.setItem('tarchier_menu_search', searchQuery);
+  }, [searchQuery]);
+
+  // Persist current view so customer returns to same place after refresh or revisit
+  React.useEffect(() => {
+    localStorage.setItem(CUSTOMER_VIEW_STORAGE_KEY, currentView);
+  }, [currentView]);
+
+  // If we restored checkout or cart but cart is empty, go back to menu
+  React.useEffect(() => {
+    if ((currentView === 'checkout' || currentView === 'cart') && cart.cartItems.length === 0) {
+      setCurrentView('menu');
+    }
+  }, [currentView, cart.cartItems.length]);
 
   // Update document title based on site settings
   React.useEffect(() => {
@@ -26,9 +65,9 @@ function MainApp() {
     document.title = siteName;
   }, [siteSettings]);
 
-  const handleViewChange = (view: 'menu' | 'cart' | 'checkout') => {
+  const handleViewChange = React.useCallback((view: 'menu' | 'cart' | 'checkout') => {
     setCurrentView(view);
-  };
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -46,7 +85,7 @@ function MainApp() {
 
   // Handler for when item is added from package selection modal
   const handleItemAdded = React.useCallback(() => {
-    // Redirect to cart view after adding item from modal
+    localStorage.setItem('tarchier_skipScrollRestore', 'true');
     setCurrentView('cart');
   }, []);
 

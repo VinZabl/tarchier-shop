@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-base sm:text-lg md:text-xl font-bold text-cafe-text whitespace-nowrap">
+            <span className="text-xs sm:text-sm md:text-base font-bold text-cafe-text whitespace-nowrap">
               Tarchier Discounted Shop
             </span>
           </button>
